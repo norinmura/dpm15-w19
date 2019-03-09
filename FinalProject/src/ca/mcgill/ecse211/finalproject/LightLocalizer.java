@@ -2,6 +2,7 @@ package ca.mcgill.ecse211.finalproject;
 
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
+import lejos.hardware.Sound;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
 /**
@@ -11,7 +12,6 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
  * moving the other until it detects a line.
  * 
  * @author Floria Peng
- * @author Jamie Li
  *
  */
 public class LightLocalizer implements Runnable {
@@ -23,8 +23,8 @@ public class LightLocalizer implements Runnable {
   private EV3LargeRegulatedMotor rightMotor; // The right motor of the robot
   double leftRadius; // The left wheel radius of the robot
   double rightRadius; // The right wheel radius of the robot
-  double track; // The track of the robot (by measuring the distance between the center of both
-  // wheel)
+  double track; // The track of the robot (by measuring the distance between the center of both wheel)
+  int corner; // The corner that the robot starts
 
   private LineCorrection linecorrection; // The instance of line correction
   private Navigation navigation; // The instance of sensor rotation
@@ -59,11 +59,12 @@ public class LightLocalizer implements Runnable {
    * @param track
    * @param navigation
    * @param linecorrection
+   * @param corner
    * @throws OdometerExceptions
    */
   public LightLocalizer(Odometer odometer, EV3LargeRegulatedMotor leftMotor,
       EV3LargeRegulatedMotor rightMotor, double leftRadius, double rightRadius, double track,
-      Navigation navigation, LineCorrection linecorrection) throws OdometerExceptions {
+      Navigation navigation, LineCorrection linecorrection, int corner) throws OdometerExceptions {
     this.odometer = odometer;
     this.leftMotor = leftMotor;
     this.rightMotor = rightMotor;
@@ -72,6 +73,7 @@ public class LightLocalizer implements Runnable {
     this.track = track;
     this.navigation = navigation;
     this.linecorrection = linecorrection;
+    this.corner = corner;
   }
 
   /**
@@ -103,7 +105,7 @@ public class LightLocalizer implements Runnable {
     navigation.back(0, BACK_DIST); // Go back offset distance, you reach the origin
 
     // Depending on the starting corner, set the Theta value accordingly
-    switch (SearchCan.SC) {
+    switch (corner) {
       case 0:
         odometer.setXYT(1 * TILE_SIZE, 1 * TILE_SIZE, 0);
         odometer.position[2] = Math.toRadians(0);
@@ -121,6 +123,9 @@ public class LightLocalizer implements Runnable {
         odometer.position[2] = Math.toRadians(90);
         break;
     }
+    Sound.beep();
+    Sound.beep();
+    Sound.beep();
   }
 
   /**
