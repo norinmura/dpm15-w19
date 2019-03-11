@@ -2,6 +2,7 @@ package ca.mcgill.ecse211.finalproject;
 
 import ca.mcgill.ecse211.odometer.*;
 import ca.mcgill.ecse211.WiFiClient.WifiConnection;
+import java.util.Arrays;
 import java.util.Map;
 import lejos.hardware.Button;
 import lejos.hardware.Sound;
@@ -241,15 +242,16 @@ public class FinalProject {
     ColorClassification colorclassification =
         new ColorClassification(usDistance, usData, colorReading, colorData); // instance of
                                                                               // ColorClassification
-    
-    WeightCan weightcan = new WeightCan(weightMotor, usDistance, usData);
+
+    WeightCan weightcan = new WeightCan(weightMotor, colorclassification);
 
     // instance of LineCorrection
     LineCorrection linecorrection =
         new LineCorrection(myColorStatus1, sampleColor1, myColorStatus2, sampleColor2);
 
     Navigation navigation = new Navigation(odometer, leftMotor, rightMotor, sensorMotor,
-        colorclassification, weightcan, linecorrection, WHEEL_RAD, WHEEL_RAD, TRACK); // instance of Navigation
+        colorclassification, weightcan, linecorrection, WHEEL_RAD, WHEEL_RAD, TRACK); // instance of
+                                                                                      // Navigation
 
     UltrasonicLocalizer uslocalizer = new UltrasonicLocalizer(odometer, leftMotor, rightMotor,
         WHEEL_RAD, WHEEL_RAD, TRACK, usDistance, usData, navigation); // instance of
@@ -283,13 +285,139 @@ public class FinalProject {
     lightThread.start();
     lightThread.join();
 
-    // Traveling to island TODO
+    // Path Generation
+    int width = sz_ur_x - sz_ll_x;
+    int height = sz_ur_y - sz_ll_y;
+    double middleR = (double) (tn_ll_y + tn_ur_y) / 2;
+    double middleG = (double) (tn_ll_x + tn_ur_x) / 2;
+    int pathLength = width * height;
+    double[][] path = new double[pathLength][3];
+    double[][] fullPath = new double[pathLength + height - 1][3];
+
+    if (redTeam == TEAM_NUMBER) {
+      int pointNumber = 0;
+      for (int i = 0; pointNumber < pathLength;) { // Recurse until the all the points are assigned
+        if ((i / width) % 2 == 0) { // even, right side of the search
+          if ((middleR - (pointNumber / width) / 2) < sz_ll_y) {
+            i += width; // If the map is filled up in one side of the tunnel, make it fill the other
+                        // side
+          } else {
+            path[pointNumber][0] = sz_ll_x + pointNumber % width;
+            path[pointNumber][1] = middleR - (i / width) / 2;
+            path[pointNumber][2] = 1;
+            pointNumber++;
+            i++;
+          }
+        } else { // odd, left side of the search region
+          if ((middleR + ((pointNumber / width) + 1) / 2) > sz_ur_y) {
+            i += width; // If the map is filled up in one side of the tunnel, make it fill the other
+                        // side
+          } else {
+            path[pointNumber][0] = sz_ll_x + pointNumber % width;
+            path[pointNumber][1] = middleR + ((i / width) / 2 + 1);
+            path[pointNumber][2] = 1;
+            pointNumber++;
+            i++;
+          }
+        }
+      }
+      int j = 1;
+      double[] initialPoint = path[0];
+      fullPath[0] = initialPoint;
+      for (int i = 1; i < pointNumber; i++) {
+        if (path[i][0] < path[i - 1][0]) { // switch line
+          fullPath[j] = Arrays.copyOf(initialPoint, initialPoint.length);
+          fullPath[j++][2] = -1; // The point is for correction purpose
+          initialPoint = path[i];
+        }
+        fullPath[j++] = path[i];
+      }
+    } else if (greenTeam == TEAM_NUMBER) {
+      int pointNumber = 0;
+      for (int i = 0; pointNumber < pathLength;) { // Recurse until the all the points are assigned
+        if ((i / height) % 2 == 0) { // even, right side of the search
+          if ((middleG - (pointNumber / height) / 2) < sz_ll_x) {
+            i += height; // If the map is filled up in one side of the tunnel, make it fill the
+                         // other side
+          } else {
+            path[pointNumber][1] = sz_ll_y + pointNumber % height;
+            path[pointNumber][0] = middleG - (i / height) / 2;
+            path[pointNumber][2] = 1;
+            pointNumber++;
+            i++;
+          }
+        } else { // odd, left side of the search region
+          if ((middleG + ((pointNumber / height) + 1) / 2) > sz_ur_x) {
+            i += height; // If the map is filled up in one side of the tunnel, make it fill the
+                         // other side
+          } else {
+            path[pointNumber][1] = sz_ll_y + pointNumber % height;
+            path[pointNumber][0] = middleG + ((i / height) / 2 + 1);
+            path[pointNumber][2] = 1;
+            pointNumber++;
+            i++;
+          }
+        }
+      }
+      int j = 1;
+      double[] initialPoint = path[0];
+      fullPath[0] = initialPoint;
+      for (int i = 1; i < pointNumber; i++) {
+        if (path[i][1] < path[i - 1][1]) { // switch line
+          fullPath[j] = Arrays.copyOf(initialPoint, initialPoint.length);
+          fullPath[j++][2] = -1; // The point is for correction purpose
+          initialPoint = path[i];
+        }
+        fullPath[j++] = path[i];
+      }
+    }
+
+    // Traveling to island and iterating the map TODO
+    int i = 0;
     if (redTeam == TEAM_NUMBER) {
       navigation.travelTo(1 * TILE_SIZE, (tn_ll_y + tn_ur_y) / 2 * TILE_SIZE);
-      navigation.travelTo(ll_x * TILE_SIZE, (tn_ll_y + tn_ur_y) / 2 * TILE_SIZE);
+      navigation.travelTo(tn_ur_x * TILE_SIZE, (tn_ll_y + tn_ur_y) / 2 * TILE_SIZE);
+      while (i < fullPath.length) {
+        navigation.moveTo(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE);
+        if (navigation.get_can) {
+          navigation.travelTo(path[0][0] * TILE_SIZE, odometer.getXYT()[1]);
+          navigation.travelTo(path[0][0] * TILE_SIZE, path[0][1] * TILE_SIZE);
+          navigation.travelTo(1 * TILE_SIZE, (tn_ll_y + tn_ur_y) / 2 * TILE_SIZE);
+          navigation.dropCan();
+          navigation.travelTo(path[0][0] * TILE_SIZE, path[0][1] * TILE_SIZE);
+        } else if (path[i][2] > 0) {
+          navigation.roundSearch();
+          if (navigation.get_can) {
+            navigation.travelTo(path[0][0] * TILE_SIZE, odometer.getXYT()[1]);
+            navigation.travelTo(path[0][0] * TILE_SIZE, path[0][1] * TILE_SIZE);
+            navigation.travelTo(1 * TILE_SIZE, (tn_ll_y + tn_ur_y) / 2 * TILE_SIZE);
+            navigation.dropCan();
+            navigation.travelTo(path[0][0] * TILE_SIZE, path[0][1] * TILE_SIZE);
+          }
+        }
+      }
     } else if (greenTeam == TEAM_NUMBER) {
       navigation.travelTo((tn_ll_x + tn_ur_x) / 2 * TILE_SIZE, 1 * TILE_SIZE);
-      navigation.travelTo((tn_ll_x + tn_ur_x) / 2 * TILE_SIZE, ll_y * TILE_SIZE);
+      navigation.travelTo((tn_ll_x + tn_ur_x) / 2 * TILE_SIZE, tn_ur_y * TILE_SIZE);
+      while (i < fullPath.length) {
+        navigation.moveTo(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE);
+        if (navigation.get_can) {
+          navigation.travelTo(odometer.getXYT()[0], path[0][1] * TILE_SIZE);
+          navigation.travelTo(path[0][0] * TILE_SIZE, path[0][1] * TILE_SIZE);
+          navigation.travelTo((tn_ll_x + tn_ur_x) / 2 * TILE_SIZE, 1 * TILE_SIZE);
+          navigation.dropCan();
+          navigation.travelTo(path[0][0] * TILE_SIZE, path[0][1] * TILE_SIZE);
+        } else if (path[i][2] > 0) {
+          navigation.roundSearch();
+          if (navigation.get_can) {
+            navigation.travelTo(odometer.getXYT()[0], path[0][1] * TILE_SIZE);
+            navigation.travelTo(path[0][0] * TILE_SIZE, path[0][1] * TILE_SIZE);
+            navigation.travelTo((tn_ll_x + tn_ur_x) / 2 * TILE_SIZE, 1 * TILE_SIZE);
+            navigation.dropCan();
+            navigation.travelTo(path[0][0] * TILE_SIZE, path[0][1] * TILE_SIZE);
+          }
+        }
+      }
     }
 
     // Wait here forever until button pressed to terminate the robot

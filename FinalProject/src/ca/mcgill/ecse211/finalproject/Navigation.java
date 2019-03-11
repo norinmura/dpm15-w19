@@ -26,6 +26,7 @@ public class Navigation {
   private static final double ROBOT_LENGTH = 10; // The length of the robot
   private static final int TUNE = 440; // The sound frequence
   public static final int FULL_TURN = 360; // 360 degree for a circle
+  public static final double TILE_SIZE = 30.48; // The tile size used for demo
 
   private LineCorrection linecorrection; // The instance of line correction
   private EV3LargeRegulatedMotor leftMotor; // The left motor of the robot
@@ -56,6 +57,8 @@ public class Navigation {
   int sound_time = 0;
   boolean not_can = false;
   boolean get_can = false;
+  double[] angles = new double[3];
+  double[] distances = new double[3]; 
 
   /**
    * The constructor for the Navigation class
@@ -94,7 +97,7 @@ public class Navigation {
    * exact goal. This method will poll the odometer for information.
    * 
    * <p>
-   * This method cannot be break
+   * This method cannot be break. Correcting angle and detect can, used for moving the robot to next rotate detect point.
    * 
    * @param x - The x coordinate for the next point
    * @param y - The y coordinate for the next point
@@ -102,6 +105,12 @@ public class Navigation {
    * @return - void method, no return
    */
   void moveTo(double x, double y) {
+    
+    Sound.beep();
+
+    if (flag == 0) { // Reset the flag
+      corrected = false;
+    }
 
     lastx = odometer.getXYT()[0]; // The last x position of the robot
     lasty = odometer.getXYT()[1]; // The last y position of the robot
@@ -117,6 +126,13 @@ public class Navigation {
     // Travel the robot to the destination point
     leftMotor.rotate(convertDistance(leftRadius, travel), true);
     rightMotor.rotate(convertDistance(rightRadius, travel), true);
+    
+    while (leftMotor.isMoving() || rightMotor.isMoving()) { // If the robot is moving
+      if (!corrected) {
+        correctAngle(x, y);
+      }
+      detectCan();
+    }
 
   }
 
@@ -129,7 +145,7 @@ public class Navigation {
    * angle when crossing a line
    * 
    * <p>
-   * This method cannot be break
+   * This method cannot be break. Correcting angle, used for the robot to travel between the starting zone and the island.
    * 
    * @param x - The x coordinate for the next point
    * @param y - The y coordinate for the next point
@@ -137,8 +153,6 @@ public class Navigation {
    * @return - void method, no return
    */
   void travelTo(double x, double y) {
-
-    Sound.beep();
 
     if (flag == 0) { // Reset the flag
       corrected = false;
@@ -174,109 +188,107 @@ public class Navigation {
    * detecting can while the robot is moving
    * 
    * <p>
-   * This method can be break
+   * This method can be break. Detect can, used for approaching the can found during the rotate search.
    * 
    * @param x - The x coordinate for the next point
    * @param y - The y coordinate for the next point
    * 
    * @return - void method, no return
    */
-  void goTo(double x, double y) {
+  void goTo(double distance) {
     get_can = false;
-
-    lastx = odometer.getXYT()[0]; // The last x position of the robot
-    lasty = odometer.getXYT()[1]; // The last y position of the robot
-
-    travel = Math.sqrt(Math.pow(x - lastx, 2) + Math.pow(y - lasty, 2)); // The travel distance
-    angle = Math.atan2(x - lastx, y - lasty) * 180 / Math.PI; // The angle that the robot should
-                                                              // rotate to
-
-    turnTo(angle); // Call the turnTo method
-
+    
     leftMotor.setSpeed(FORWARD_SPEED);
     rightMotor.setSpeed(FORWARD_SPEED);
     // Travel the robot to the destination point
-    leftMotor.rotate(convertDistance(leftRadius, travel), true);
-    rightMotor.rotate(convertDistance(rightRadius, travel), true);
+    leftMotor.rotate(convertDistance(leftRadius, distance), true);
+    rightMotor.rotate(convertDistance(rightRadius, distance), true);
 
     while (leftMotor.isMoving() || rightMotor.isMoving()) { // If the robot is moving
+      detectCan();
+    }
+  }
+  
+  void detectCan() {
+    warning = colorclassification.median_filter();
+    if (warning < SCAN_DISTANCE) {
+      Sound.beepSequenceUp();
 
-      warning = colorclassification.median_filter();
-      if (warning < SCAN_DISTANCE) {
-        Sound.beepSequenceUp();
+      leftMotor.setAcceleration(ACCELERATION);
+      rightMotor.setAcceleration(ACCELERATION);
+      leftMotor.stop(true);
+      rightMotor.stop(false);
 
-        leftMotor.setAcceleration(ACCELERATION);
-        rightMotor.setAcceleration(ACCELERATION);
-        leftMotor.stop(true);
-        rightMotor.stop(false);
+      move(APPROACH_CAN); // Move close to the can
 
-        move(APPROACH_CAN); // Move close to the can
-
-        Thread classificationThread = new Thread(colorclassification); // set a new thread to scan
-                                                                       // the color
-        classificationThread.start(); // the color scanning thread starts
-        sensorMotor.setSpeed(ROTATE_SPEED / 4); // set the scanning speed
-        sensorMotor.rotate(FULL_TURN, true); // The sensor motor will rotate less than 180 degree
-                                             // (as we are using a gear)
-        while (sensorMotor.isMoving()) { // Wait for the sensor to stop
-          try {
-            Thread.sleep(50);
-          } catch (Exception e) {
-          }
-        }
-        colorclassification.stop = true; // scan is done
+      Thread classificationThread = new Thread(colorclassification); // set a new thread to scan
+                                                                     // the color
+      classificationThread.start(); // the color scanning thread starts
+      sensorMotor.setSpeed(ROTATE_SPEED / 4); // set the scanning speed
+      sensorMotor.rotate(FULL_TURN, true); // The sensor motor will rotate less than 180 degree
+                                           // (as we are using a gear)
+      while (sensorMotor.isMoving()) { // Wait for the sensor to stop
         try {
-          classificationThread.join();
-        } catch (InterruptedException e) {
-          e.printStackTrace();
+          Thread.sleep(50);
+        } catch (Exception e) {
         }
-        sensorMotor.setSpeed(ROTATE_SPEED / 4); // set the scanning speed
-        sensorMotor.rotate(-FULL_TURN, true); // The sensor motor will rotate less than 180
-                                              // degree (as we are using a gear)
-        if (colorclassification.color == 5) {
-          return; // TODO
-        }
-
-        Thread weightThread = new Thread(weightcan); // set a new thread to weight the can
-        weightThread.start(); // the weighting thread starts
-        try {
-          weightThread.join(); // wait for the weighting process to finish
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        }
-
-        if (weightcan.heavy) {
-          sound_time = 1000;
-        } else {
-          sound_time = 500;
-        }
-
-        // TODO
-        switch (colorclassification.color) {
-          case 1:
-            Sound.playTone(TUNE, sound_time);
-            break;
-          case 2:
-            Sound.playTone(TUNE, sound_time);
-            Sound.playTone(TUNE, sound_time);
-            break;
-          case 3:
-            Sound.playTone(TUNE, sound_time);
-            Sound.playTone(TUNE, sound_time);
-            Sound.playTone(TUNE, sound_time);
-            break;
-          case 4:
-            Sound.playTone(TUNE, sound_time);
-            Sound.playTone(TUNE, sound_time);
-            Sound.playTone(TUNE, sound_time);
-            Sound.playTone(TUNE, sound_time);
-            break;
-        }
-        get_can = true;
       }
+      colorclassification.stop = true; // scan is done
+      try {
+        classificationThread.join();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+      sensorMotor.setSpeed(ROTATE_SPEED / 4); // set the scanning speed
+      sensorMotor.rotate(-FULL_TURN, true); // The sensor motor will rotate less than 180
+                                            // degree (as we are using a gear)
+      if (colorclassification.color == 5) {
+        return; // TODO
+      }
+
+      Thread weightThread = new Thread(weightcan); // set a new thread to weight the can
+      weightThread.start(); // the weighting thread starts
+      try {
+        weightThread.join(); // wait for the weighting process to finish
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+
+      if (weightcan.heavy) {
+        sound_time = 1000;
+      } else {
+        sound_time = 500;
+      }
+
+      // TODO
+      switch (colorclassification.color) {
+        case 1:
+          Sound.playTone(TUNE, sound_time);
+          break;
+        case 2:
+          Sound.playTone(TUNE, sound_time);
+          Sound.playTone(TUNE, sound_time);
+          break;
+        case 3:
+          Sound.playTone(TUNE, sound_time);
+          Sound.playTone(TUNE, sound_time);
+          Sound.playTone(TUNE, sound_time);
+          break;
+        case 4:
+          Sound.playTone(TUNE, sound_time);
+          Sound.playTone(TUNE, sound_time);
+          Sound.playTone(TUNE, sound_time);
+          Sound.playTone(TUNE, sound_time);
+          break;
+      }
+      get_can = true; // The robot is getting a can
     }
   }
 
+  /**
+   * The method implements the dropping can. The robot is able to drop the can when it reaches the
+   * starting zone.
+   */
   void dropCan() {
     weightcan.claw_open();
     back(ROBOT_LENGTH, ROBOT_LENGTH);
@@ -330,7 +342,7 @@ public class Navigation {
         }
         if (flag++ == 0) {
           forward(1, 1);
-          goTo(x, y);
+          travelTo(x, y);
         }
       }
     }
@@ -393,6 +405,54 @@ public class Navigation {
     leftMotor.rotate(-convertDistance(leftRadius, distance), true);
     rightMotor.rotate(-convertDistance(rightRadius, distance), false);
 
+  }
+
+  void roundSearch() {
+
+    leftMotor.setSpeed(ROTATE_SPEED);
+    rightMotor.setSpeed(ROTATE_SPEED);
+
+    leftMotor.rotate(convertAngle(leftRadius, track, FULL_TURN), true);
+    rightMotor.rotate(-convertAngle(rightRadius, track, FULL_TURN), true);
+    // The true is to ensure the method can be interrupted.
+    
+    boolean key = true;
+    while (key) {
+      while (colorclassification.median_filter() > TILE_SIZE) {
+        try {
+          Thread.sleep(50);
+        } catch (Exception e) {
+        }
+      }
+      angles[0] = odometer.getXYT()[2];
+      distances[0] = colorclassification.median_filter();
+      while(colorclassification.median_filter() < distances[0]) {
+        // TODO sensor error may exist (only one side of the can is scaned)
+        try {
+          Thread.sleep(50);
+        } catch (Exception e) {
+        }
+      }
+      angles[1] = odometer.getXYT()[2];
+      distances[1] = colorclassification.median_filter();
+      
+      if (angles[1] - angles[0] < FULL_TURN / 6) {
+        leftMotor.stop(true);
+        rightMotor.stop(false); 
+        angles[2] = (angles[0] + angles[1]) / 2;
+        if (angles[2] >= FULL_TURN) {
+          angles[2] -= FULL_TURN;
+        }
+        distances[2] = (distances[0] + distances[1]) / 2;
+        key = false;
+        turnTo(angles[2]);
+        goTo(distances[2]);
+      }
+      if (!leftMotor.isMoving() || !rightMotor.isMoving()) { // The turning ends
+        break;
+      }
+    }
+    
   }
 
   /**
