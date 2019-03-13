@@ -104,7 +104,7 @@ public class ColorClassification implements Runnable {
 				int[] arr = Arrays.copyOf(detected, detected.length);
 				Arrays.sort(arr);
 				if (arr[3] == 0) {
-				  color = 5; // No color dected
+				  color = 5; // No color detected
 				  break;
 				}
 				color = 0;

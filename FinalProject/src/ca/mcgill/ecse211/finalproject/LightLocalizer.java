@@ -111,15 +111,15 @@ public class LightLocalizer implements Runnable {
         odometer.position[2] = Math.toRadians(0);
         break;
       case 1:
-        odometer.setXYT(7 * TILE_SIZE, 1 * TILE_SIZE, 270);
+        odometer.setXYT(14 * TILE_SIZE, 1 * TILE_SIZE, 270);
         odometer.position[2] = Math.toRadians(270);
         break;
       case 2:
-        odometer.setXYT(7 * TILE_SIZE, 7 * TILE_SIZE, 180);
+        odometer.setXYT(14 * TILE_SIZE, 9 * TILE_SIZE, 180);
         odometer.position[2] = Math.toRadians(180);
         break;
       case 3:
-        odometer.setXYT(1 * TILE_SIZE, 7 * TILE_SIZE, 90);
+        odometer.setXYT(1 * TILE_SIZE, 9 * TILE_SIZE, 90);
         odometer.position[2] = Math.toRadians(90);
         break;
     }

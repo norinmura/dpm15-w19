@@ -18,7 +18,7 @@ import lejos.hardware.sensor.SensorModes;
 import lejos.robotics.SampleProvider;
 
 /**
- * This is the main class of the program for "Lab 5: Search and Localize" Starting in a known
+ * This is the main class of the program for the Final Project. Starting in a known
  * corner, localize to the grid, and perform a search in the prescribed area for a can of specified
  * color. It will then detect the can and identify its color. The prescribed area is given to us by
  * a lower left corner and an upper right corner.
@@ -31,7 +31,7 @@ public class FinalProject {
   /* STATIC FIELDS */
 
   // ** Set these as appropriate for your team and current situation **
-  private static final String SERVER_IP = "192.168.2.3";
+  private static final String SERVER_IP = "192.168.2.16";
   private static final int TEAM_NUMBER = 15; // Team 15
 
   // Enable/disable printing of debug info from the WiFi class
@@ -49,9 +49,9 @@ public class FinalProject {
       new UnregulatedMotor(LocalEV3.get().getPort("D"));
 
   // Ports
-  private static final Port usPort = LocalEV3.get().getPort("S1"); // Ultrasonic sensor port
-  private static final Port portColor1 = LocalEV3.get().getPort("S2"); // Light sensor port1
-  private static final Port portColor2 = LocalEV3.get().getPort("S3"); // Light sensor port2
+  private static final Port usPort = LocalEV3.get().getPort("S3"); // Ultrasonic sensor port
+  private static final Port portColor1 = LocalEV3.get().getPort("S1"); // Light sensor port1
+  private static final Port portColor2 = LocalEV3.get().getPort("S2"); // Light sensor port2
   private static final Port colorPort = LocalEV3.get().getPort("S4"); // Light sensor port for color
                                                                       // detection
 
@@ -59,12 +59,12 @@ public class FinalProject {
 
   /* CONSTANTS */
   public static final double WHEEL_RAD = 2.1; // The radius of the wheel
-  public static final double TRACK = 11.35; // The width of the robot measured
+  public static final double TRACK = 11.85; // The width of the robot measured
   public static final int FULL_TURN = 360; // 360 degree for a circle
   public static final double TILE_SIZE = 30.48; // The tile size used for demo
 
   /**
-   * The main method from Lab3 class. This class will start the threads used for the program.
+   * The main method for the Final Project. This class will start the threads used for the program.
    * 
    * @param args
    * 
@@ -261,7 +261,7 @@ public class FinalProject {
         WHEEL_RAD, TRACK, navigation, linecorrection, corner); // instance of LightLocalizer
 
     Sound.beepSequenceUp(); // Shows its ready
-
+    
     /* STARTING THREADS */
 
     // Starting odometer thread

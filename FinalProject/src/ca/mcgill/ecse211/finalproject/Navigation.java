@@ -58,7 +58,7 @@ public class Navigation {
   boolean not_can = false;
   boolean get_can = false;
   double[] angles = new double[3];
-  double[] distances = new double[3]; 
+  double[] distances = new double[3];
 
   /**
    * The constructor for the Navigation class
@@ -97,7 +97,8 @@ public class Navigation {
    * exact goal. This method will poll the odometer for information.
    * 
    * <p>
-   * This method cannot be break. Correcting angle and detect can, used for moving the robot to next rotate detect point.
+   * This method cannot be break. Correcting angle and detect can, used for moving the robot to next
+   * rotate detect point.
    * 
    * @param x - The x coordinate for the next point
    * @param y - The y coordinate for the next point
@@ -105,7 +106,7 @@ public class Navigation {
    * @return - void method, no return
    */
   void moveTo(double x, double y) {
-    
+
     Sound.beep();
 
     if (flag == 0) { // Reset the flag
@@ -126,7 +127,7 @@ public class Navigation {
     // Travel the robot to the destination point
     leftMotor.rotate(convertDistance(leftRadius, travel), true);
     rightMotor.rotate(convertDistance(rightRadius, travel), true);
-    
+
     while (leftMotor.isMoving() || rightMotor.isMoving()) { // If the robot is moving
       if (!corrected) {
         correctAngle(x, y);
@@ -145,7 +146,8 @@ public class Navigation {
    * angle when crossing a line
    * 
    * <p>
-   * This method cannot be break. Correcting angle, used for the robot to travel between the starting zone and the island.
+   * This method cannot be break. Correcting angle, used for the robot to travel between the
+   * starting zone and the island.
    * 
    * @param x - The x coordinate for the next point
    * @param y - The y coordinate for the next point
@@ -188,7 +190,8 @@ public class Navigation {
    * detecting can while the robot is moving
    * 
    * <p>
-   * This method can be break. Detect can, used for approaching the can found during the rotate search.
+   * This method can be break. Detect can, used for approaching the can found during the rotate
+   * search.
    * 
    * @param x - The x coordinate for the next point
    * @param y - The y coordinate for the next point
@@ -197,7 +200,7 @@ public class Navigation {
    */
   void goTo(double distance) {
     get_can = false;
-    
+
     leftMotor.setSpeed(FORWARD_SPEED);
     rightMotor.setSpeed(FORWARD_SPEED);
     // Travel the robot to the destination point
@@ -208,7 +211,11 @@ public class Navigation {
       detectCan();
     }
   }
-  
+
+  /**
+   * This method implements the can detection. The robot will stop in front of the can and detect
+   * the color and weight.
+   */
   void detectCan() {
     warning = colorclassification.median_filter();
     if (warning < SCAN_DISTANCE) {
@@ -225,7 +232,7 @@ public class Navigation {
                                                                      // the color
       classificationThread.start(); // the color scanning thread starts
       sensorMotor.setSpeed(ROTATE_SPEED / 4); // set the scanning speed
-      sensorMotor.rotate(FULL_TURN, true); // The sensor motor will rotate less than 180 degree
+      sensorMotor.rotate(-FULL_TURN, true); // The sensor motor will rotate less than 180 degree
                                            // (as we are using a gear)
       while (sensorMotor.isMoving()) { // Wait for the sensor to stop
         try {
@@ -240,7 +247,7 @@ public class Navigation {
         e.printStackTrace();
       }
       sensorMotor.setSpeed(ROTATE_SPEED / 4); // set the scanning speed
-      sensorMotor.rotate(-FULL_TURN, true); // The sensor motor will rotate less than 180
+      sensorMotor.rotate(FULL_TURN, true); // The sensor motor will rotate less than 180
                                             // degree (as we are using a gear)
       if (colorclassification.color == 5) {
         return; // TODO
@@ -255,9 +262,9 @@ public class Navigation {
       }
 
       if (weightcan.heavy) {
-        sound_time = 1000;
+        sound_time = 1000; // 1000 ms
       } else {
-        sound_time = 500;
+        sound_time = 500; // 500 ms
       }
 
       // TODO
@@ -336,10 +343,10 @@ public class Navigation {
           odometer.setTheta(270);
           odometer.position[2] = Math.toRadians(270);
         }
-        try {
+        /*try {
           Thread.sleep(500);
         } catch (Exception e) {
-        }
+        }*/
         if (flag++ == 0) {
           forward(1, 1);
           travelTo(x, y);
@@ -407,6 +414,11 @@ public class Navigation {
 
   }
 
+  /**
+   * This method implements the round search of the can. The robot will self-rotate (up to 360
+   * degrees) until it sees a can, and then it calls the goTo(s, y) method to approach and detect
+   * the can.
+   */
   void roundSearch() {
 
     leftMotor.setSpeed(ROTATE_SPEED);
@@ -415,44 +427,49 @@ public class Navigation {
     leftMotor.rotate(convertAngle(leftRadius, track, FULL_TURN), true);
     rightMotor.rotate(-convertAngle(rightRadius, track, FULL_TURN), true);
     // The true is to ensure the method can be interrupted.
-    
-    boolean key = true;
+
+    boolean key = true; // true for no can detected yet
     while (key) {
-      while (colorclassification.median_filter() > TILE_SIZE) {
+      while (colorclassification.median_filter() > TILE_SIZE) { // Stop here if the distance
+                                                                // detected is still large
         try {
           Thread.sleep(50);
         } catch (Exception e) {
         }
       }
-      angles[0] = odometer.getXYT()[2];
+      angles[0] = odometer.getXYT()[2]; // Record the angle and distance if the ultrasonic sensor
+                                        // detects an objects
       distances[0] = colorclassification.median_filter();
-      while(colorclassification.median_filter() < distances[0]) {
+      while (colorclassification.median_filter() < distances[0]) { // The ultrasonic is still
+                                                                   // detecting the can
         // TODO sensor error may exist (only one side of the can is scaned)
         try {
           Thread.sleep(50);
         } catch (Exception e) {
         }
       }
-      angles[1] = odometer.getXYT()[2];
+      angles[1] = odometer.getXYT()[2]; // Record the angle and distance if the ultrasonic sensor
+                                        // does not detect the can
       distances[1] = colorclassification.median_filter();
-      
-      if (angles[1] - angles[0] < FULL_TURN / 6) {
+
+      if (angles[1] - angles[0] < FULL_TURN / 6) { // To make sure the object is small to be a can
+        // Stop the motors and calculate the angle and distance of the can
         leftMotor.stop(true);
-        rightMotor.stop(false); 
+        rightMotor.stop(false);
         angles[2] = (angles[0] + angles[1]) / 2;
         if (angles[2] >= FULL_TURN) {
           angles[2] -= FULL_TURN;
         }
         distances[2] = (distances[0] + distances[1]) / 2;
         key = false;
-        turnTo(angles[2]);
-        goTo(distances[2]);
+        turnTo(angles[2]); // Turn towards the can
+        goTo(distances[2]); // Go towards the can
       }
-      if (!leftMotor.isMoving() || !rightMotor.isMoving()) { // The turning ends
+      if (!leftMotor.isMoving() || !rightMotor.isMoving()) { // The turning ends or a can detected
         break;
       }
     }
-    
+
   }
 
   /**
