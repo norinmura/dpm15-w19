@@ -23,7 +23,8 @@ public class LightLocalizer implements Runnable {
   private EV3LargeRegulatedMotor rightMotor; // The right motor of the robot
   double leftRadius; // The left wheel radius of the robot
   double rightRadius; // The right wheel radius of the robot
-  double track; // The track of the robot (by measuring the distance between the center of both wheel)
+  double track; // The track of the robot (by measuring the distance between the center of both
+                // wheel)
   int corner; // The corner that the robot starts
 
   private LineCorrection linecorrection; // The instance of line correction
@@ -145,7 +146,8 @@ public class LightLocalizer implements Runnable {
       if (line[1]) { // (right motor)
         rightMotor.stop(true);
       }
-      if (!leftMotor.isMoving() && !rightMotor.isMoving()) { // If both light sensor detects the black line
+      if (!leftMotor.isMoving() && !rightMotor.isMoving()) { // If both light sensor detects the
+                                                             // black line
         // It means both wheels are in the same line
         line[0] = false;
         line[1] = false;

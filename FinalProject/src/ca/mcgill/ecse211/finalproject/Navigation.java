@@ -233,7 +233,7 @@ public class Navigation {
       classificationThread.start(); // the color scanning thread starts
       sensorMotor.setSpeed(ROTATE_SPEED / 4); // set the scanning speed
       sensorMotor.rotate(-FULL_TURN, true); // The sensor motor will rotate less than 180 degree
-                                           // (as we are using a gear)
+                                            // (as we are using a gear)
       while (sensorMotor.isMoving()) { // Wait for the sensor to stop
         try {
           Thread.sleep(50);
@@ -248,7 +248,7 @@ public class Navigation {
       }
       sensorMotor.setSpeed(ROTATE_SPEED / 4); // set the scanning speed
       sensorMotor.rotate(FULL_TURN, true); // The sensor motor will rotate less than 180
-                                            // degree (as we are using a gear)
+                                           // degree (as we are using a gear)
       if (colorclassification.color == 5) {
         return; // TODO
       }
@@ -343,10 +343,9 @@ public class Navigation {
           odometer.setTheta(270);
           odometer.position[2] = Math.toRadians(270);
         }
-        /*try {
-          Thread.sleep(500);
-        } catch (Exception e) {
-        }*/
+        /*
+         * try { Thread.sleep(500); } catch (Exception e) { }
+         */
         if (flag++ == 0) {
           forward(1, 1);
           travelTo(x, y);

@@ -17,7 +17,6 @@ public class WeightCan implements Runnable {
                                         // for (Basic Motor)
   private ColorClassification colorclassification; // used to call the method that gets the reading
                                                    // from Ultrasonic Sensor
-
   /* Constants */
   private static final int ANGLE = 80; // angle to lift
   private static final int MIN_POWER = 10; // The power to lift a light can but not the heavy can

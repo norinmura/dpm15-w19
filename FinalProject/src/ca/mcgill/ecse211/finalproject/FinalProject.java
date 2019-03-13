@@ -18,10 +18,10 @@ import lejos.hardware.sensor.SensorModes;
 import lejos.robotics.SampleProvider;
 
 /**
- * This is the main class of the program for the Final Project. Starting in a known
- * corner, localize to the grid, and perform a search in the prescribed area for a can of specified
- * color. It will then detect the can and identify its color. The prescribed area is given to us by
- * a lower left corner and an upper right corner.
+ * This is the main class of the program for the Final Project. Starting in a known corner, localize
+ * to the grid, and perform a search in the prescribed area for a can of specified color. It will
+ * then detect the can and identify its color. The prescribed area is given to us by a lower left
+ * corner and an upper right corner.
  * 
  * @author Floria Peng
  *
@@ -261,7 +261,7 @@ public class FinalProject {
         WHEEL_RAD, TRACK, navigation, linecorrection, corner); // instance of LightLocalizer
 
     Sound.beepSequenceUp(); // Shows its ready
-    
+
     /* STARTING THREADS */
 
     // Starting odometer thread
