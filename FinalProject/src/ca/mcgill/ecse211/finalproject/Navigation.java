@@ -17,19 +17,23 @@ import lejos.hardware.motor.EV3MediumRegulatedMotor;
 public class Navigation {
 
   private Odometer odometer; // The odometer instance
-  public static final int FORWARD_SPEED = 120; // The forward speed for the robot
+  public static final int FORWARD_SPEED = 120; // The forward speed for the robot TODO adjust to max
+                                               // speed it can
   public static final int ROTATE_SPEED = 100; // The rotation speed for the robot
   private static final int ACCELERATION = 3000; // The acceleration of the motor
-  private static final double SCAN_DISTANCE = 7; // The detect a can distance TODO
+  private static final double SCAN_DISTANCE = 7; // The detect a can distance
+  private static final double APPROACH_CAN = 4; // Get closer to the can
+  private static final double ROBOT_LENGTH = 10; // The length of the robot
+  private static final int TUNE = 440; // The sound frequence
   public static final int FULL_TURN = 360; // 360 degree for a circle
-  private static final double PREPARE_SQUARE = 30.48 / 2; // TODO
-  private static final double SQUARE_LENGTH = 30.48 / 2; // TODO
+  public static final double TILE_SIZE = 30.48; // The tile size used for demo
 
   private LineCorrection linecorrection; // The instance of line correction
   private EV3LargeRegulatedMotor leftMotor; // The left motor of the robot
   private EV3LargeRegulatedMotor rightMotor; // The right motor of the robot
   private EV3MediumRegulatedMotor sensorMotor; // The sensor motor of the robot
   private ColorClassification colorclassification; // The ColorClassification instance
+  private WeightCan weightcan; // The WeightCan instance
   double leftRadius; // The left wheel radius of the robot
   double rightRadius; // The right wheel radius of the robot
   double track; // The track of the robot (by measuring the distance between the center of both
@@ -49,8 +53,12 @@ public class Navigation {
   long[] time = new long[2]; // The time of the light sensor
   boolean[] line = {false, false}; // The detection of the line of the two light sensors
   boolean corrected = false;
-  double before = 0;
   int flag = 0;
+  int sound_time = 0;
+  boolean not_can = false;
+  boolean get_can = false;
+  double[] angles = new double[3];
+  double[] distances = new double[3];
 
   /**
    * The constructor for the Navigation class
@@ -67,13 +75,14 @@ public class Navigation {
    */
   public Navigation(Odometer odometer, EV3LargeRegulatedMotor leftMotor,
       EV3LargeRegulatedMotor rightMotor, EV3MediumRegulatedMotor sensorMotor,
-      ColorClassification colorclassification, LineCorrection linecorrection, double leftRadius,
-      double rightRadius, double track) throws OdometerExceptions {
+      ColorClassification colorclassification, WeightCan weightcan, LineCorrection linecorrection,
+      double leftRadius, double rightRadius, double track) throws OdometerExceptions {
     this.odometer = odometer;
     this.leftMotor = leftMotor;
     this.rightMotor = rightMotor;
     this.sensorMotor = sensorMotor;
     this.colorclassification = colorclassification;
+    this.weightcan = weightcan;
     this.linecorrection = linecorrection;
     this.leftRadius = leftRadius;
     this.rightRadius = rightRadius;
@@ -88,48 +97,16 @@ public class Navigation {
    * exact goal. This method will poll the odometer for information.
    * 
    * <p>
-   * This method cannot be break
+   * This method cannot be break. Correcting angle and detect can, used for moving the robot to next
+   * rotate detect point.
    * 
    * @param x - The x coordinate for the next point
    * @param y - The y coordinate for the next point
    * 
    * @return - void method, no return
    */
-  void travelTo(double x, double y) {
+  void moveTo(double x, double y) {
 
-    lastx = odometer.getXYT()[0]; // The last x position of the robot
-    lasty = odometer.getXYT()[1]; // The last y position of the robot
-
-    travel = Math.sqrt(Math.pow(x - lastx, 2) + Math.pow(y - lasty, 2)); // The travel distance
-    angle = Math.atan2(x - lastx, y - lasty) * 180 / Math.PI; // The angle that the robot should
-                                                              // rotate to
-
-    turnTo(angle); // Call the turnTo method
-
-    leftMotor.setSpeed(FORWARD_SPEED);
-    rightMotor.setSpeed(FORWARD_SPEED);
-    // Travel the robot to the destination point
-    leftMotor.rotate(convertDistance(leftRadius, travel), true);
-    rightMotor.rotate(convertDistance(rightRadius, travel), false);
-
-  }
-
-  /**
-   * <p>
-   * This method causes the robot to travel to the absolute field location (x, y), specified in tile
-   * points. This method should continuously call turnTo(double theta) and then set the motor speed
-   * to forward(straight). This will make sure that your heading is updated until you reach your
-   * exact goal. This method will poll the odometer for information.
-   * 
-   * <p>
-   * This method can be break
-   * 
-   * @param x - The x coordinate for the next point
-   * @param y - The y coordinate for the next point
-   * 
-   * @return - void method, no return
-   */
-  void goTo(double x, double y, int position) {
     Sound.beep();
 
     if (flag == 0) { // Reset the flag
@@ -153,54 +130,175 @@ public class Navigation {
 
     while (leftMotor.isMoving() || rightMotor.isMoving()) { // If the robot is moving
       if (!corrected) {
-        correctAngle(x, y, position);
-        flag = 1;
+        correctAngle(x, y);
       }
-
-      warning = colorclassification.median_filter();
-      if (warning < SCAN_DISTANCE) { // TODO
-        Sound.beepSequenceUp();
-
-        leftMotor.setAcceleration(ACCELERATION);
-        rightMotor.setAcceleration(ACCELERATION);
-        leftMotor.stop(true);
-        rightMotor.stop(false);
-
-        move(4); // Move close to the can
-
-        Thread classificationThread = new Thread(colorclassification); // set a new thread to scan
-                                                                       // the color
-        classificationThread.start(); // the color scanning thread starts
-        sensorMotor.setSpeed(ROTATE_SPEED / 4); // set the scanning speed
-        sensorMotor.rotate(FULL_TURN - 10, true); // The sensor motor will rotate less than 180
-                                                  // degree (as we are using a gear)
-        while (sensorMotor.isMoving()) { // Wait for the sensor to stop
-          try {
-            Thread.sleep(50);
-          } catch (Exception e) {
-          }
-        }
-        colorclassification.stop = true; // scan is done
-        try {
-          classificationThread.join();
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        }
-        if (colorclassification.color == SearchCan.TR) { // If the can has the target color
-          colorclassification.found = true;
-          Sound.beep(); // beep once
-          sensorMotor.setSpeed(ROTATE_SPEED);
-          sensorMotor.rotate(-FULL_TURN, false);
-          return;
-        } else { // If the is not the target color
-          Sound.twoBeeps(); // beep twice
-          sensorMotor.setSpeed(ROTATE_SPEED);
-          sensorMotor.rotate(-FULL_TURN + 10, false);
-          canAvoidance(position); // avoid the can
-        }
-      }
+      detectCan();
     }
 
+  }
+
+  /**
+   * <p>
+   * This method causes the robot to travel to the absolute field location (x, y), specified in tile
+   * points. This method should continuously call turnTo(double theta) and then set the motor speed
+   * to forward(straight). This will make sure that your heading is updated until you reach your
+   * exact goal. This method will poll the odometer for information. The robot will correct its
+   * angle when crossing a line
+   * 
+   * <p>
+   * This method cannot be break. Correcting angle, used for the robot to travel between the
+   * starting zone and the island.
+   * 
+   * @param x - The x coordinate for the next point
+   * @param y - The y coordinate for the next point
+   * 
+   * @return - void method, no return
+   */
+  void travelTo(double x, double y) {
+
+    if (flag == 0) { // Reset the flag
+      corrected = false;
+    }
+
+    lastx = odometer.getXYT()[0]; // The last x position of the robot
+    lasty = odometer.getXYT()[1]; // The last y position of the robot
+
+    travel = Math.sqrt(Math.pow(x - lastx, 2) + Math.pow(y - lasty, 2)); // The travel distance
+    angle = Math.atan2(x - lastx, y - lasty) * 180 / Math.PI; // The angle that the robot should
+                                                              // rotate to
+
+    turnTo(angle); // Call the turnTo method
+
+    leftMotor.setSpeed(FORWARD_SPEED);
+    rightMotor.setSpeed(FORWARD_SPEED);
+    // Travel the robot to the destination point
+    leftMotor.rotate(convertDistance(leftRadius, travel), true);
+    rightMotor.rotate(convertDistance(rightRadius, travel), true);
+
+    if (!corrected) {
+      correctAngle(x, y);
+    }
+
+  }
+
+  /**
+   * <p>
+   * This method causes the robot to travel to the absolute field location (x, y), specified in tile
+   * points. This method should continuously call turnTo(double theta) and then set the motor speed
+   * to forward(straight). This will make sure that your heading is updated until you reach your
+   * exact goal. This method will poll the odometer for information. The ultrasonic will keep
+   * detecting can while the robot is moving
+   * 
+   * <p>
+   * This method can be break. Detect can, used for approaching the can found during the rotate
+   * search.
+   * 
+   * @param x - The x coordinate for the next point
+   * @param y - The y coordinate for the next point
+   * 
+   * @return - void method, no return
+   */
+  void goTo(double distance) {
+    get_can = false;
+
+    leftMotor.setSpeed(FORWARD_SPEED);
+    rightMotor.setSpeed(FORWARD_SPEED);
+    // Travel the robot to the destination point
+    leftMotor.rotate(convertDistance(leftRadius, distance), true);
+    rightMotor.rotate(convertDistance(rightRadius, distance), true);
+
+    while (leftMotor.isMoving() || rightMotor.isMoving()) { // If the robot is moving
+      detectCan();
+    }
+  }
+
+  /**
+   * This method implements the can detection. The robot will stop in front of the can and detect
+   * the color and weight.
+   */
+  void detectCan() {
+    warning = colorclassification.median_filter();
+    if (warning < SCAN_DISTANCE) {
+      Sound.beepSequenceUp();
+
+      leftMotor.setAcceleration(ACCELERATION);
+      rightMotor.setAcceleration(ACCELERATION);
+      leftMotor.stop(true);
+      rightMotor.stop(false);
+
+      move(APPROACH_CAN); // Move close to the can
+
+      Thread classificationThread = new Thread(colorclassification); // set a new thread to scan
+                                                                     // the color
+      classificationThread.start(); // the color scanning thread starts
+      sensorMotor.setSpeed(ROTATE_SPEED / 4); // set the scanning speed
+      sensorMotor.rotate(-FULL_TURN, true); // The sensor motor will rotate less than 180 degree
+                                            // (as we are using a gear)
+      while (sensorMotor.isMoving()) { // Wait for the sensor to stop
+        try {
+          Thread.sleep(50);
+        } catch (Exception e) {
+        }
+      }
+      colorclassification.stop = true; // scan is done
+      try {
+        classificationThread.join();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+      sensorMotor.setSpeed(ROTATE_SPEED / 4); // set the scanning speed
+      sensorMotor.rotate(FULL_TURN, true); // The sensor motor will rotate less than 180
+                                           // degree (as we are using a gear)
+      if (colorclassification.color == 5) {
+        return; // TODO
+      }
+
+      Thread weightThread = new Thread(weightcan); // set a new thread to weight the can
+      weightThread.start(); // the weighting thread starts
+      try {
+        weightThread.join(); // wait for the weighting process to finish
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+
+      if (weightcan.heavy) {
+        sound_time = 1000; // 1000 ms
+      } else {
+        sound_time = 500; // 500 ms
+      }
+
+      // TODO
+      switch (colorclassification.color) {
+        case 1:
+          Sound.playTone(TUNE, sound_time);
+          break;
+        case 2:
+          Sound.playTone(TUNE, sound_time);
+          Sound.playTone(TUNE, sound_time);
+          break;
+        case 3:
+          Sound.playTone(TUNE, sound_time);
+          Sound.playTone(TUNE, sound_time);
+          Sound.playTone(TUNE, sound_time);
+          break;
+        case 4:
+          Sound.playTone(TUNE, sound_time);
+          Sound.playTone(TUNE, sound_time);
+          Sound.playTone(TUNE, sound_time);
+          Sound.playTone(TUNE, sound_time);
+          break;
+      }
+      get_can = true; // The robot is getting a can
+    }
+  }
+
+  /**
+   * The method implements the dropping can. The robot is able to drop the can when it reaches the
+   * starting zone.
+   */
+  void dropCan() {
+    weightcan.claw_open();
+    back(ROBOT_LENGTH, ROBOT_LENGTH);
   }
 
   /**
@@ -212,7 +310,7 @@ public class Navigation {
    * @param y - The y point that will be going to.
    * @param position - The type of the map point (pre-defined in the SearchCan class)
    */
-  void correctAngle(double x, double y, int position) {
+  void correctAngle(double x, double y) {
     boolean key = true;
     while (key) {
       line[0] = linecorrection.filter1();
@@ -245,48 +343,14 @@ public class Navigation {
           odometer.setTheta(270);
           odometer.position[2] = Math.toRadians(270);
         }
-        try {
-          Thread.sleep(500);
-        } catch (Exception e) {
-        }
+        /*
+         * try { Thread.sleep(500); } catch (Exception e) { }
+         */
         if (flag++ == 0) {
           forward(1, 1);
-          goTo(x, y, position);
+          travelTo(x, y);
         }
       }
-    }
-  }
-
-  /**
-   * 
-   * The method implements the can avoidance. It enables the robot to avoid the can in different
-   * types of map point.
-   * 
-   * @param position - The position of the robot on the map (traveling straight or turning at the
-   *        left or right corner)
-   */
-  void canAvoidance(int position) {
-    back((PREPARE_SQUARE - 2.9), 0); // diameter of can = 5.8cm
-    if (position == 0) { // right side can
-      rotate(-90);
-      forward(SQUARE_LENGTH, 0);
-      rotate(90);
-      forward(SQUARE_LENGTH * 2 + 2.9, 0);
-      rotate(-90);
-    } else if (position == 1) { // left side can
-      rotate(90);
-      forward(SQUARE_LENGTH, 0);
-      rotate(-90);
-      forward(SQUARE_LENGTH * 2 + 2.9, 0);
-      rotate(90);
-    } else if (position == 2) { // straight line can
-      rotate(90);
-      forward(SQUARE_LENGTH, 0);
-      rotate(-90);
-      forward(SQUARE_LENGTH * 2 + 2.9, 0);
-      rotate(-90);
-      forward(SQUARE_LENGTH, 0);
-      rotate(90);
     }
   }
 
@@ -346,6 +410,64 @@ public class Navigation {
     rightMotor.setSpeed(FORWARD_SPEED);
     leftMotor.rotate(-convertDistance(leftRadius, distance), true);
     rightMotor.rotate(-convertDistance(rightRadius, distance), false);
+
+  }
+
+  /**
+   * This method implements the round search of the can. The robot will self-rotate (up to 360
+   * degrees) until it sees a can, and then it calls the goTo(s, y) method to approach and detect
+   * the can.
+   */
+  void roundSearch() {
+
+    leftMotor.setSpeed(ROTATE_SPEED);
+    rightMotor.setSpeed(ROTATE_SPEED);
+
+    leftMotor.rotate(convertAngle(leftRadius, track, FULL_TURN), true);
+    rightMotor.rotate(-convertAngle(rightRadius, track, FULL_TURN), true);
+    // The true is to ensure the method can be interrupted.
+
+    boolean key = true; // true for no can detected yet
+    while (key) {
+      while (colorclassification.median_filter() > TILE_SIZE) { // Stop here if the distance
+                                                                // detected is still large
+        try {
+          Thread.sleep(50);
+        } catch (Exception e) {
+        }
+      }
+      angles[0] = odometer.getXYT()[2]; // Record the angle and distance if the ultrasonic sensor
+                                        // detects an objects
+      distances[0] = colorclassification.median_filter();
+      while (colorclassification.median_filter() < distances[0]) { // The ultrasonic is still
+                                                                   // detecting the can
+        // TODO sensor error may exist (only one side of the can is scaned)
+        try {
+          Thread.sleep(50);
+        } catch (Exception e) {
+        }
+      }
+      angles[1] = odometer.getXYT()[2]; // Record the angle and distance if the ultrasonic sensor
+                                        // does not detect the can
+      distances[1] = colorclassification.median_filter();
+
+      if (angles[1] - angles[0] < FULL_TURN / 6) { // To make sure the object is small to be a can
+        // Stop the motors and calculate the angle and distance of the can
+        leftMotor.stop(true);
+        rightMotor.stop(false);
+        angles[2] = (angles[0] + angles[1]) / 2;
+        if (angles[2] >= FULL_TURN) {
+          angles[2] -= FULL_TURN;
+        }
+        distances[2] = (distances[0] + distances[1]) / 2;
+        key = false;
+        turnTo(angles[2]); // Turn towards the can
+        goTo(distances[2]); // Go towards the can
+      }
+      if (!leftMotor.isMoving() || !rightMotor.isMoving()) { // The turning ends or a can detected
+        break;
+      }
+    }
 
   }
 
@@ -445,8 +567,8 @@ public class Navigation {
    * @param distance
    * @return
    */
-  private static int convertDistance(double radius, double distance) { // convert from radius and
-                                                                       // distance to distance
+  private static int convertDistance(double radius, double distance) {
+    // convert from radius and distance to distance
     return (int) ((180.0 * distance) / (Math.PI * radius));
   }
 
@@ -456,10 +578,8 @@ public class Navigation {
    * @param angle
    * @return
    */
-  private static int convertAngle(double radius, double width, double angle) { // convert from
-                                                                               // radius angle and
-                                                                               // width to a
-                                                                               // distance
+  private static int convertAngle(double radius, double width, double angle) {
+    // convert from radius angle and width to a distance
     return convertDistance(radius, Math.PI * width * angle / 360.0);
   }
 
