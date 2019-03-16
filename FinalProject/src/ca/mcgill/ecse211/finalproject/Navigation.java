@@ -17,9 +17,9 @@ import lejos.hardware.motor.EV3MediumRegulatedMotor;
 public class Navigation {
 
   private Odometer odometer; // The odometer instance
-  public static final int FORWARD_SPEED = 120; // The forward speed for the robot TODO adjust to max
+  public static final int FORWARD_SPEED = 180; // The forward speed for the robot TODO adjust to max
                                                // speed it can
-  public static final int ROTATE_SPEED = 100; // The rotation speed for the robot
+  public static final int ROTATE_SPEED = 150; // The rotation speed for the robot
   private static final int ACCELERATION = 3000; // The acceleration of the motor
   private static final double SCAN_DISTANCE = 7; // The detect a can distance
   private static final double APPROACH_CAN = 4; // Get closer to the can
@@ -154,7 +154,7 @@ public class Navigation {
    * 
    * @return - void method, no return
    */
-  void travelTo(double x, double y) {
+  public void travelTo(double x, double y) {
 
     if (flag == 0) { // Reset the flag
       corrected = false;
@@ -532,7 +532,7 @@ public class Navigation {
    * 
    * @param theta - The angle to turn
    */
-  void rotate(double theta) {
+  public void rotate(double theta) {
 
     leftMotor.setSpeed(ROTATE_SPEED);
     rightMotor.setSpeed(ROTATE_SPEED);

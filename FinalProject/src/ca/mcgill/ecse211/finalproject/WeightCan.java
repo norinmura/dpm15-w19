@@ -75,7 +75,7 @@ public class WeightCan implements Runnable {
    * @param power: value between 0 and 100 that represent the percentage of how much power of the
    *        motor you use
    */
-  void claw_close(int power) {
+  public void claw_close(int power) {
     Sound.beep();
     weightMotor.resetTachoCount();
     weightMotor.setPower(power);
@@ -91,7 +91,7 @@ public class WeightCan implements Runnable {
   /**
    * Drop the can back on the floor and open the claw
    */
-  void claw_open() {
+  public void claw_open() {
     weightMotor.setPower(MAX_POWER);
     lastTachoCount = weightMotor.getTachoCount();
     while (Math.abs(weightMotor.getTachoCount() - lastTachoCount) < ANGLE) {
@@ -101,6 +101,10 @@ public class WeightCan implements Runnable {
       }
     }
     weightMotor.stop();
+  }
+  
+  public int getMaxPower() {
+	return MAX_POWER;  
   }
 
 }
