@@ -16,7 +16,7 @@ import lejos.hardware.motor.EV3MediumRegulatedMotor;
  */
 public class Navigation {
 
-  private Odometer odometer; // The odometer instance
+  /* STATIC FIELDS */
   public static final int FORWARD_SPEED = 120; // The forward speed for the robot TODO adjust to max
                                                // speed it can
   public static final int ROTATE_SPEED = 100; // The rotation speed for the robot
@@ -28,6 +28,8 @@ public class Navigation {
   public static final int FULL_TURN = 360; // 360 degree for a circle
   public static final double TILE_SIZE = 30.48; // The tile size used for demo
 
+  /* PRIVATE FIELDS */
+  private Odometer odometer; // The odometer instance
   private LineCorrection linecorrection; // The instance of line correction
   private EV3LargeRegulatedMotor leftMotor; // The left motor of the robot
   private EV3LargeRegulatedMotor rightMotor; // The right motor of the robot
@@ -39,6 +41,7 @@ public class Navigation {
   double track; // The track of the robot (by measuring the distance between the center of both
                 // wheel)
 
+  /* FIELDS */
   double lastx; // The last x position of the robot
   double lasty; // The last y position of the robot
   double lasttheta; // The last angle of the robot
@@ -109,6 +112,7 @@ public class Navigation {
 
     Sound.beep();
 
+    /* INITIALIZE VARIABLES */
     if (flag == 0) { // Reset the flag
       corrected = false;
     }
@@ -156,10 +160,12 @@ public class Navigation {
    */
   void travelTo(double x, double y) {
 
+    /* INITIALIZE VARIABLES */
     if (flag == 0) { // Reset the flag
       corrected = false;
     }
 
+    /* Calculate move angle and distance */
     lastx = odometer.getXYT()[0]; // The last x position of the robot
     lasty = odometer.getXYT()[1]; // The last y position of the robot
 
@@ -175,6 +181,7 @@ public class Navigation {
     leftMotor.rotate(convertDistance(leftRadius, travel), true);
     rightMotor.rotate(convertDistance(rightRadius, travel), true);
 
+    // TODO
     if (!corrected) {
       correctAngle(x, y);
     }
@@ -199,6 +206,7 @@ public class Navigation {
    * @return - void method, no return
    */
   void goTo(double distance) {
+    /* INITIALIZE VARIABLES */
     get_can = false;
 
     leftMotor.setSpeed(FORWARD_SPEED);
@@ -311,6 +319,7 @@ public class Navigation {
    * @param position - The type of the map point (pre-defined in the SearchCan class)
    */
   void correctAngle(double x, double y) {
+    /* INITIALIZE VARIABLES */
     boolean key = true;
     while (key) {
       line[0] = linecorrection.filter1();

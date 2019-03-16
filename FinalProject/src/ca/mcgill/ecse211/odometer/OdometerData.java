@@ -16,19 +16,20 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class OdometerData {
 
+  /* FIELDS */
   // Position parameters
   private volatile double x; // x-axis position
   private volatile double y; // y-axis position
   private volatile double theta; // Head angle
 
-  // Class control variables
+  /* Class control variables */
   private volatile static int numberOfIntances = 0; // Number of OdometerData
                                                     // objects instantiated
                                                     // so far
   private static final int MAX_INSTANCES = 1; // Maximum number of
                                               // OdometerData instances
 
-  // Thread control tools
+  /* Thread control tools */
   private static Lock lock = new ReentrantLock(true); // Fair lock for
                                                       // concurrent writing
   private volatile boolean isReseting = false; // Indicates if a thread is

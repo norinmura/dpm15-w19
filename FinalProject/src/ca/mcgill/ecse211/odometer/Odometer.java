@@ -13,16 +13,18 @@ package ca.mcgill.ecse211.odometer;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
 /**
+ * This class implements the odometer of the robot. (Completed during Lab2) This class enables the
+ * robot to get its location related to the convention of the x and y coordinates
+ * 
  * @author Floria Peng
- *
- *         This class implements the odometer of the robot. (Completed during Lab2) This class
- *         enables the robot to get its location related to the convention of the x and y
- *         coordinates
  */
 public class Odometer extends OdometerData implements Runnable {
 
-  private OdometerData odoData;
+  /* STATIC FIELD */
   private static Odometer odo = null; // Returned as singleton
+
+  /* PRIVATE FIELDS */
+  private OdometerData odoData;
 
   // Motors and related variables
   private int leftMotorTachoCount;
@@ -33,8 +35,10 @@ public class Odometer extends OdometerData implements Runnable {
   private final double TRACK;
   private final double WHEEL_RAD;
 
+  /* FIELD */
   public double[] position = new double[3];
 
+  /* CONSTANT */
   private static final long ODOMETER_PERIOD = 25; // odometer update period in ms
 
   /**

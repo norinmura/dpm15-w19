@@ -19,7 +19,8 @@ import lejos.robotics.SampleProvider;
  *
  */
 public class UltrasonicLocalizer implements Runnable {
-
+  
+  /* STATIC FIELDS */
   public static final int INFINITY_DISTANCE = 50; // The distance that the sensor consider the robot
                                                   // is not facing the wall
   public static final int WALL_DISTANCE = 30; // The distance that the sensor consider the robot is
@@ -28,18 +29,21 @@ public class UltrasonicLocalizer implements Runnable {
   public static final int FULL_TURN = 360; // 360 degree for a circle
   private static final int ACCELERATION = 3000; // The acceleration of the motor
 
+  /* PRIVATE FIELDS */
   private Odometer odometer; // The odometer instance
   private EV3LargeRegulatedMotor leftMotor; // The left motor of the robot
   private EV3LargeRegulatedMotor rightMotor; // The right motor of the robot
+  private SampleProvider us; // The sample provider for the ultrasonic sensor
+  private float[] usData; // The data buffer for the ultrasonic sensor reading
+  private Navigation navigation; // The instance of navigation
+  
+  /* FIELDS */
   double leftRadius; // The left wheel radius of the robot
   double rightRadius; // The right wheel radius of the robot
   double track; // The track of the robot (by measuring the distance between the center of both
                 // wheel)
 
-  private SampleProvider us; // The sample provider for the ultrasonic sensor
-  private float[] usData; // The data buffer for the ultrasonic sensor reading
-  private Navigation navigation; // The instance of navigation
-
+  /* CONSTANTS */
   int d = 35; // An arbitrary distance that the robot record the angle (first/last below)
   int k = 1; // To eliminate the noise
   double first = 0; // The first angle that falls into the band (d+/-k)

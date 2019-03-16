@@ -31,7 +31,7 @@ public class FinalProject {
   /* STATIC FIELDS */
 
   // ** Set these as appropriate for your team and current situation **
-  private static final String SERVER_IP = "192.168.2.16";
+  private static final String SERVER_IP = "192.168.2.31";
   private static final int TEAM_NUMBER = 15; // Team 15
 
   // Enable/disable printing of debug info from the WiFi class
@@ -48,13 +48,13 @@ public class FinalProject {
   private static final UnregulatedMotor weightMotor =
       new UnregulatedMotor(LocalEV3.get().getPort("D"));
 
-  // Ports
+  /* Ports */
   private static final Port usPort = LocalEV3.get().getPort("S3"); // Ultrasonic sensor port
   private static final Port portColor1 = LocalEV3.get().getPort("S1"); // Light sensor port1
   private static final Port portColor2 = LocalEV3.get().getPort("S2"); // Light sensor port2
   private static final Port colorPort = LocalEV3.get().getPort("S4"); // Light sensor port for color
                                                                       // detection
-
+  /* LCD */
   private static final TextLCD lcd = LocalEV3.get().getTextLCD(); // The LCD display
 
   /* CONSTANTS */
@@ -284,7 +284,8 @@ public class FinalProject {
     Thread lightThread = new Thread(lightlocalizer);
     lightThread.start();
     lightThread.join();
-
+    
+    /* Generating the search map */
     // Path Generation
     int width = sz_ur_x - sz_ll_x;
     int height = sz_ur_y - sz_ll_y;
@@ -371,7 +372,8 @@ public class FinalProject {
         fullPath[j++] = path[i];
       }
     }
-
+    
+    /* Traverse the search map and navigate */
     // Traveling to island and iterating the map TODO
     int i = 0;
     if (redTeam == TEAM_NUMBER) {
@@ -419,7 +421,8 @@ public class FinalProject {
         }
       }
     }
-
+    
+    /* Waiting for exit */
     // Wait here forever until button pressed to terminate the robot
     Button.waitForAnyPress();
     System.exit(0);
