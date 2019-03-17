@@ -3,7 +3,6 @@ package ca.mcgill.ecse211.finalproject;
 import java.util.Arrays;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
-import lejos.hardware.Sound;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.robotics.SampleProvider;
 
@@ -23,9 +22,6 @@ public class UltrasonicLocalizer implements Runnable {
   /* STATIC FIELDS */
   public static final int INFINITY_DISTANCE = 50; // The distance that the sensor consider the robot
                                                   // is not facing the wall
-  public static final int WALL_DISTANCE = 30; // The distance that the sensor consider the robot is
-                                              // facing the wall
-  public static boolean OPTION = true; // true for falling edge, false for rising edge
   public static final int FULL_TURN = 360; // 360 degree for a circle
   private static final int ACCELERATION = 3000; // The acceleration of the motor
 
@@ -44,7 +40,7 @@ public class UltrasonicLocalizer implements Runnable {
                 // wheel)
 
   /* CONSTANTS */
-  int d = 35; // An arbitrary distance that the robot record the angle (first/last below)
+  int d = 40; // An arbitrary distance that the robot record the angle (first/last below)
   int k = 1; // To eliminate the noise
   double first = 0; // The first angle that falls into the band (d+/-k)
   double last = 0; // The last angle that falls into the band (d+/-k)
@@ -91,47 +87,14 @@ public class UltrasonicLocalizer implements Runnable {
    * @see java.lang.Runnable#run()
    */
   public void run() {
-    if (OPTION) { // Falling edge
-      navigation.turn(FULL_TURN); // The robot will rotate clockwise for a full turn until disrupted
-      while (rightMotor.isMoving() || leftMotor.isMoving()) {
-        if (filter() > INFINITY_DISTANCE) { // If the robot is not facing the wall
-          leftMotor.setAcceleration(ACCELERATION);
-          rightMotor.setAcceleration(ACCELERATION);
-          leftMotor.stop(true); // Stop the motors
-          rightMotor.stop(false);
-          Sound.beepSequenceUp();
-          break;
-        }
-        try {
-          Thread.sleep(50);
-        } catch (Exception e) {
-        }
-      }
+    if (filter() > INFINITY_DISTANCE) { // Falling edge
       fallingEdge(); // Call the fallingEdge method
     } else { // Rising edge
-      navigation.turn(-FULL_TURN); // The robot will rotate counter-clockwise for a full turn until
-                                   // disrupted
-      while (rightMotor.isMoving() || leftMotor.isMoving()) {
-        if (filter() < WALL_DISTANCE) { // If the robot is facing the wall
-          leftMotor.setAcceleration(ACCELERATION);
-          rightMotor.setAcceleration(ACCELERATION);
-          leftMotor.stop(true); // Stop the motors
-          rightMotor.stop(false);
-          Sound.beepSequenceUp();
-          break;
-        }
-        try {
-          Thread.sleep(50);
-        } catch (Exception e) {
-        }
-      }
       risingEdge(); // Call the risingEdge method
     }
-
     navigation.turnTo(-error); // Correct the angle of the robot
     odometer.position[2] = 0; // Reset the angle of the odometer
     odometer.setTheta(0); // Reset the angle of the odometerData
-
   }
 
   /**

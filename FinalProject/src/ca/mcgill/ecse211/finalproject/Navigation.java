@@ -17,9 +17,9 @@ import lejos.hardware.motor.EV3MediumRegulatedMotor;
 public class Navigation {
 
   /* STATIC FIELDS */
-  public static final int FORWARD_SPEED = 120; // The forward speed for the robot TODO adjust to max
+  public static final int FORWARD_SPEED = 180; // The forward speed for the robot TODO adjust to max
                                                // speed it can
-  public static final int ROTATE_SPEED = 100; // The rotation speed for the robot
+  public static final int ROTATE_SPEED = 150; // The rotation speed for the robot
   private static final int ACCELERATION = 3000; // The acceleration of the motor
   private static final double SCAN_DISTANCE = 7; // The detect a can distance
   private static final double APPROACH_CAN = 4; // Get closer to the can
@@ -50,18 +50,17 @@ public class Navigation {
   double angle; // The angle to which the robot should turn to get to the next map point
   double theta; // The angle that the robot should actually rotate
   double warning; // The front ultrasonic sensor distance detected
-  double enter; // The entering avoidance angle
   boolean isNavigating = false; // True for the robot is traveling to next point
 
   long[] time = new long[2]; // The time of the light sensor
   boolean[] line = {false, false}; // The detection of the line of the two light sensors
-  boolean corrected = false;
-  int flag = 0;
   int sound_time = 0;
   boolean not_can = false;
   boolean get_can = false;
   double[] angles = new double[3];
   double[] distances = new double[3];
+  double target_color = -1;
+  double end_angle = 0; // The angle left for rotate search
 
   /**
    * The constructor for the Navigation class
@@ -79,7 +78,7 @@ public class Navigation {
   public Navigation(Odometer odometer, EV3LargeRegulatedMotor leftMotor,
       EV3LargeRegulatedMotor rightMotor, EV3MediumRegulatedMotor sensorMotor,
       ColorClassification colorclassification, WeightCan weightcan, LineCorrection linecorrection,
-      double leftRadius, double rightRadius, double track) throws OdometerExceptions {
+      double leftRadius, double rightRadius, double track, int target_color) throws OdometerExceptions {
     this.odometer = odometer;
     this.leftMotor = leftMotor;
     this.rightMotor = rightMotor;
@@ -90,6 +89,7 @@ public class Navigation {
     this.leftRadius = leftRadius;
     this.rightRadius = rightRadius;
     this.track = track;
+    this.target_color = target_color;
   }
 
   /**
@@ -112,11 +112,6 @@ public class Navigation {
 
     Sound.beep();
 
-    /* INITIALIZE VARIABLES */
-    if (flag == 0) { // Reset the flag
-      corrected = false;
-    }
-
     lastx = odometer.getXYT()[0]; // The last x position of the robot
     lasty = odometer.getXYT()[1]; // The last y position of the robot
 
@@ -133,10 +128,18 @@ public class Navigation {
     rightMotor.rotate(convertDistance(rightRadius, travel), true);
 
     while (leftMotor.isMoving() || rightMotor.isMoving()) { // If the robot is moving
-      if (!corrected) {
-        correctAngle(x, y);
-      }
+      correctAngle(x, y, 1); // The third variable is to indicate which method is calling
+                             // correctAngle
       detectCan();
+      if (get_can) {
+        weightcan.claw_close(30); // Power 30
+        rotate(FULL_TURN / 2);
+        forward(TILE_SIZE / 3, 0);
+        weightcan.claw_open();
+        back(TILE_SIZE / 3, 0);
+        rotate(FULL_TURN / 2);
+        moveTo(x, y);
+      }
     }
 
   }
@@ -160,11 +163,6 @@ public class Navigation {
    */
   void travelTo(double x, double y) {
 
-    /* INITIALIZE VARIABLES */
-    if (flag == 0) { // Reset the flag
-      corrected = false;
-    }
-
     /* Calculate move angle and distance */
     lastx = odometer.getXYT()[0]; // The last x position of the robot
     lasty = odometer.getXYT()[1]; // The last y position of the robot
@@ -181,11 +179,12 @@ public class Navigation {
     leftMotor.rotate(convertDistance(leftRadius, travel), true);
     rightMotor.rotate(convertDistance(rightRadius, travel), true);
 
-    // TODO
-    if (!corrected) {
-      correctAngle(x, y);
+    // TODO error, only correct once
+    while (leftMotor.isMoving() || rightMotor.isMoving()) {
+      correctAngle(x, y, 2); // The third variable is to indicate which method is calling
+                             // correctAngle
     }
-
+    
   }
 
   /**
@@ -206,8 +205,6 @@ public class Navigation {
    * @return - void method, no return
    */
   void goTo(double distance) {
-    /* INITIALIZE VARIABLES */
-    get_can = false;
 
     leftMotor.setSpeed(FORWARD_SPEED);
     rightMotor.setSpeed(FORWARD_SPEED);
@@ -225,6 +222,10 @@ public class Navigation {
    * the color and weight.
    */
   void detectCan() {
+    /* INITIALIZE VARIABLES */
+    get_can = false;
+    target_color = -1;
+
     warning = colorclassification.median_filter();
     if (warning < SCAN_DISTANCE) {
       Sound.beepSequenceUp();
@@ -257,45 +258,14 @@ public class Navigation {
       sensorMotor.setSpeed(ROTATE_SPEED / 4); // set the scanning speed
       sensorMotor.rotate(FULL_TURN, true); // The sensor motor will rotate less than 180
                                            // degree (as we are using a gear)
-      if (colorclassification.color == 5) {
+      if (colorclassification.color == target_color) {
+        Sound.twoBeeps();
+        Sound.twoBeeps();
+        Sound.twoBeeps();
+        Sound.twoBeeps();
+        Sound.twoBeeps();
         return; // TODO
-      }
-
-      Thread weightThread = new Thread(weightcan); // set a new thread to weight the can
-      weightThread.start(); // the weighting thread starts
-      try {
-        weightThread.join(); // wait for the weighting process to finish
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-
-      if (weightcan.heavy) {
-        sound_time = 1000; // 1000 ms
-      } else {
-        sound_time = 500; // 500 ms
-      }
-
-      // TODO
-      switch (colorclassification.color) {
-        case 1:
-          Sound.playTone(TUNE, sound_time);
-          break;
-        case 2:
-          Sound.playTone(TUNE, sound_time);
-          Sound.playTone(TUNE, sound_time);
-          break;
-        case 3:
-          Sound.playTone(TUNE, sound_time);
-          Sound.playTone(TUNE, sound_time);
-          Sound.playTone(TUNE, sound_time);
-          break;
-        case 4:
-          Sound.playTone(TUNE, sound_time);
-          Sound.playTone(TUNE, sound_time);
-          Sound.playTone(TUNE, sound_time);
-          Sound.playTone(TUNE, sound_time);
-          break;
-      }
+      }   
       get_can = true; // The robot is getting a can
     }
   }
@@ -318,7 +288,7 @@ public class Navigation {
    * @param y - The y point that will be going to.
    * @param position - The type of the map point (pre-defined in the SearchCan class)
    */
-  void correctAngle(double x, double y) {
+  void correctAngle(double x, double y, int method) {
     /* INITIALIZE VARIABLES */
     boolean key = true;
     while (key) {
@@ -326,15 +296,12 @@ public class Navigation {
       line[1] = linecorrection.filter2();
       if (line[0]) { // If the black line is detected, the robot will stop
         leftMotor.stop(true);
-        // rightMotor.setSpeed(50);
       }
       if (line[1]) {
         rightMotor.stop(true);
-        // leftMotor.setSpeed(50);
       }
       if (!leftMotor.isMoving() && !rightMotor.isMoving()) {
         key = false;
-        corrected = true;
         line[0] = false;
         line[1] = false;
         leftMotor.stop(true);
@@ -352,10 +319,10 @@ public class Navigation {
           odometer.setTheta(270);
           odometer.position[2] = Math.toRadians(270);
         }
-        /*
-         * try { Thread.sleep(500); } catch (Exception e) { }
-         */
-        if (flag++ == 0) {
+        if (method == 1) {
+          forward(1, 1);
+          moveTo(x, y);
+        } else if (method == 2) {
           forward(1, 1);
           travelTo(x, y);
         }
@@ -421,19 +388,47 @@ public class Navigation {
     rightMotor.rotate(-convertDistance(rightRadius, distance), false);
 
   }
+  
+  /**
+   * <p>
+   * This method is the back method of the robot. The forward distance is calculated by the x and y
+   * parameter passed to this method (Euclidean distance). And the robot will travel back this
+   * distance.
+   * 
+   * <p>
+   * This method cannot be break
+   * 
+   * @param x - The x distance the robot should move
+   * @param y - The y distance the robot should move
+   */
+  void backTo(double x, double y) {
+    
+    /* Calculate move angle and distance */
+    lastx = odometer.getXYT()[0]; // The last x position of the robot
+    lasty = odometer.getXYT()[1]; // The last y position of the robot
+    
+    distance = Math.sqrt(Math.pow(x - lastx, 2) + Math.pow(y - lasty, 2)); // The travel distance
+
+    leftMotor.setSpeed(FORWARD_SPEED);
+    rightMotor.setSpeed(FORWARD_SPEED);
+    leftMotor.rotate(-convertDistance(leftRadius, distance), true);
+    rightMotor.rotate(-convertDistance(rightRadius, distance), false);
+
+  }
 
   /**
    * This method implements the round search of the can. The robot will self-rotate (up to 360
    * degrees) until it sees a can, and then it calls the goTo(s, y) method to approach and detect
    * the can.
    */
-  void roundSearch() {
+  void roundSearch(double x, double y, double angle) {
+    end_angle = odometer.getXYT()[2] + angle;
 
     leftMotor.setSpeed(ROTATE_SPEED);
     rightMotor.setSpeed(ROTATE_SPEED);
 
-    leftMotor.rotate(convertAngle(leftRadius, track, FULL_TURN), true);
-    rightMotor.rotate(-convertAngle(rightRadius, track, FULL_TURN), true);
+    leftMotor.rotate(convertAngle(leftRadius, track, angle), true);
+    rightMotor.rotate(-convertAngle(rightRadius, track, angle), true);
     // The true is to ensure the method can be interrupted.
 
     boolean key = true; // true for no can detected yet
@@ -472,6 +467,18 @@ public class Navigation {
         key = false;
         turnTo(angles[2]); // Turn towards the can
         goTo(distances[2]); // Go towards the can
+        if (get_can) {
+          weightcan.claw_close(30); // power 30
+        }
+        backTo(x, y);
+        if (get_can) {
+          rotate(FULL_TURN / 2);
+          forward(TILE_SIZE / 3, 0);
+          weightcan.claw_open();
+          back(TILE_SIZE / 3, 0);
+          rotate(FULL_TURN / 2);
+          roundSearch(x, y, end_angle - odometer.getXYT()[2]);
+        }
       }
       if (!leftMotor.isMoving() || !rightMotor.isMoving()) { // The turning ends or a can detected
         break;
