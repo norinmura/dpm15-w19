@@ -1,6 +1,7 @@
 package ca.mcgill.ecse211.finalproject;
 
 import lejos.hardware.Sound;
+import lejos.hardware.lcd.LCD;
 import lejos.hardware.motor.UnregulatedMotor;
 
 /**
@@ -18,11 +19,11 @@ public class WeightCan implements Runnable {
   private ColorClassification colorclassification; // used to call the method that gets the reading
                                                    // from Ultrasonic Sensor
   /* Constants */
-  private static final int ANGLE = 80; // angle to lift
+  private static final int ANGLE = 50; // angle to lift
   private static final int MIN_POWER = 10; // The power to lift a light can but not the heavy can
                                            // TODO
   private static final int MAX_POWER = 30; // The power needed to lift a heavy can
-  private static final int WAIT_TIME = 50; // Time to wait before we request the ultrasonic sensor
+  private static final int WAIT_TIME = 1000; // Time to wait before we request the ultrasonic sensor
                                            // to say whether or not it still detects a can. TODO
   private static final int NEAR_SENSOR = 5; // threshold value to check that determines whether or
                                             // not the can is light
@@ -61,7 +62,9 @@ public class WeightCan implements Runnable {
     if (colorclassification.median_filter() < NEAR_SENSOR
         || colorclassification.median_filter() > OUT_OF_BOUND) {
       heavy = true;
+      LCD.clear();
       claw_open();
+      LCD.clear();
       claw_close(MAX_POWER);
     } else {
       heavy = false;
@@ -107,4 +110,7 @@ public class WeightCan implements Runnable {
 	return MAX_POWER;  
   }
 
+  public boolean isHeavy() {
+	  return heavy;
+  }
 }
