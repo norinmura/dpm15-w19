@@ -11,11 +11,26 @@ import lejos.hardware.lcd.TextLCD;
 public class Display implements Runnable {
 
 	/*FIELDS*/
-	private Odometer odo; //odometer
-	private TextLCD lcd; //lcd screen
-	private double[] position; //X, Y and theta position
-	private final long DISPLAY_PERIOD = 25; //Time to display
-	private long timeout = Long.MAX_VALUE; //timeout value to end
+	/**
+	 * Odometer 
+	 */
+	private Odometer odo;
+	/**
+	 * LCD screen
+	 */
+	private TextLCD lcd; 
+	/**
+	 * X, Y and theta position
+	 */
+	private double[] position;
+	/**
+	 * Time to display
+	 */
+	private final long DISPLAY_PERIOD = 25; 
+	/**
+	 * Timeout value to end
+	 */
+	private long timeout = Long.MAX_VALUE; 
 
 	/**
 	 * This is the default constructor.
