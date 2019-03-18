@@ -6,21 +6,16 @@ import lejos.robotics.SampleProvider;
  * This class implements differential filter for the color sensor detecting lines.
  * 
  * @author Floria Peng
- *
  */
 public class LineCorrection {
 
-  /*
-   * Instances
-   */
+  /* PRIVATE FIELDS */
   private SampleProvider myColorStatus1; // The sample provider for the color sensor
   private float[] sampleColor1; // The data buffer for the color sensor reading
   private SampleProvider myColorStatus2; // The sample provider for the color sensor
   private float[] sampleColor2; // The data buffer for the color sensor reading
 
-  /*
-   * Variables
-   */
+  /* CONSTANTS */
   double[] last = {Math.PI, Math.PI}; // Initialize the last variable to a specific number
   double[] current = {0, 0}; // last and current are both used for differential filter
 
@@ -50,6 +45,7 @@ public class LineCorrection {
    */
   boolean filter1() { // Differential filter
 
+    /* Obtain and store the color reading */
     myColorStatus1.fetchSample(sampleColor1, 0); // Used for obtaining color reading from the
                                                  // SampleProvider
 
@@ -61,6 +57,8 @@ public class LineCorrection {
       current[0] = sampleColor1[0]; // Update the current
     }
     System.out.println("");
+    
+    /* Detect the differential */
     if ((current[0] - last[0]) * 1000 < -40) { // If there is a black line detected
       System.out.println("");
       return true;
@@ -76,6 +74,7 @@ public class LineCorrection {
    */
   boolean filter2() { // Differential filter
 
+    /* Obtain and store the color reading */
     myColorStatus2.fetchSample(sampleColor2, 0); // Used for obtaining color reading from the
                                                  // SampleProvider
 
@@ -87,6 +86,8 @@ public class LineCorrection {
       current[1] = sampleColor2[0]; // Update the current
     }
     System.out.println("");
+    
+    /* Detect the differential */
     if ((current[1] - last[1]) * 1000 < -40) { // If there is a black line detected
       System.out.println("");
       return true;

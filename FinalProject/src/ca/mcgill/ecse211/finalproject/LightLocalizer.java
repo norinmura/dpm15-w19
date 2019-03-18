@@ -2,7 +2,6 @@ package ca.mcgill.ecse211.finalproject;
 
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
-import lejos.hardware.Sound;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
 /**
@@ -12,7 +11,6 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
  * moving the other until it detects a line.
  * 
  * @author Floria Peng
- *
  */
 public class LightLocalizer implements Runnable {
 
@@ -21,11 +19,6 @@ public class LightLocalizer implements Runnable {
   private Odometer odometer; // The odometer instance
   private EV3LargeRegulatedMotor leftMotor; // The left motor of the robot
   private EV3LargeRegulatedMotor rightMotor; // The right motor of the robot
-  double leftRadius; // The left wheel radius of the robot
-  double rightRadius; // The right wheel radius of the robot
-  double track; // The track of the robot (by measuring the distance between the center of both
-                // wheel)
-  int corner; // The corner that the robot starts
 
   private LineCorrection linecorrection; // The instance of line correction
   private Navigation navigation; // The instance of sensor rotation
@@ -38,6 +31,12 @@ public class LightLocalizer implements Runnable {
                                                // sensors)
 
   /* NON-PRIVATE FIELDS */
+  double leftRadius; // The left wheel radius of the robot
+  double rightRadius; // The right wheel radius of the robot
+  double track; // The track of the robot (by measuring the distance between the center of both
+                // wheel)
+  int corner; // The corner that the robot starts
+  
   double last = Math.PI; // Initialize the last variable to a specific number
   double current = 0; // last and current are both used for differential filter
   double[] detect1 = new double[4]; // The x and y tile line detect angle, clockwise
@@ -87,6 +86,7 @@ public class LightLocalizer implements Runnable {
    */
   public void run() {
 
+    /* Line localization */
     // The robot will first travel 45 degree front-right first until the light sensor detects a line
     navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer
                                 // reading
@@ -105,6 +105,7 @@ public class LightLocalizer implements Runnable {
     correctAngle();// when a line is detected, correct angle
     navigation.back(0, BACK_DIST); // Go back offset distance, you reach the origin
 
+    /* Correct the coordination */
     // Depending on the starting corner, set the Theta value accordingly
     switch (corner) {
       case 0:
@@ -124,9 +125,7 @@ public class LightLocalizer implements Runnable {
         odometer.position[2] = Math.toRadians(90);
         break;
     }
-    Sound.beep();
-    Sound.beep();
-    Sound.beep();
+    
   }
 
   /**

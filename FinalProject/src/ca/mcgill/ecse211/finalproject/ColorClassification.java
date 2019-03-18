@@ -9,11 +9,10 @@ import lejos.robotics.SampleProvider;
  * red, green or yellow.
  * 
  * @author Floria Peng
- *
  */
 public class ColorClassification implements Runnable {
 
-  /* CONSTANTS */
+  /* STATIC FIELDS */
   /**
    * The normalized mean value for each color. The values were found after taking 100 sample point
    * for each color, normalizing them and taking the average of these normalized values. The first
@@ -69,18 +68,17 @@ public class ColorClassification implements Runnable {
    * This is the method that is called when the thread is called.
    */
   public void run() {
-
-    // Initialize the thread
+    
+    /* Initialize the thread variables */
     stop = false;
     color = -1;
-
     // Initialize detected array values to zero
     for (int i = 0; i < 4; i++) {
       detected[i] = 0;
     }
-
+    
+    /* Detect the can color */
     while (true) {
-
       /**
        * If a color is detected, then you increase the array at the corresponding value. Number 1
        * detects blue color and increases detected at position 0. Number 2 detects green color and
@@ -128,7 +126,7 @@ public class ColorClassification implements Runnable {
    */
   boolean colorDetect(int colorID) {
 
-    // Initialize target mean and standard deviation
+    /* Initialize target mean and standard deviation */
     float[] target_mean = {0, 0, 0};
     float[] target_std = {0, 0, 0};
 
@@ -152,9 +150,11 @@ public class ColorClassification implements Runnable {
         target_std = STD_RED_HAT;
         break;
     }
-
+    
+    /* Obtain the color reading */
     float[] reading = mean_filter(); // Read value from filter
-
+    
+    /* Compare the color */
     // If the reading value is within 3 standard deviations from the target mean for the 3
     // components, then return that color is identified.
     if (Math.abs(reading[0] - target_mean[0]) < 3 * target_std[0]
@@ -173,11 +173,13 @@ public class ColorClassification implements Runnable {
    * @return filtered distance reading
    */
   double median_filter() {
+    /* Obtain and store the readings */
     double[] arr = new double[5];
     for (int i = 0; i < 5; i++) { // take 5 readings
       usDistance.fetchSample(usData, 0); // store reading in buffer
       arr[i] = usData[0] * 100.0; // amplify signal
     }
+    /* Get the median */
     Arrays.sort(arr); // sort readings
     return arr[2]; // take median value
   }
@@ -189,6 +191,7 @@ public class ColorClassification implements Runnable {
    */
   float[] mean_filter() {
 
+    /* Obtain and store the readings */
     float[][] arr = new float[5][3]; // store readings
     float[][] temp = new float[5][3];
     float[] RGB = {0, 0, 0};
@@ -198,6 +201,8 @@ public class ColorClassification implements Runnable {
       arr[i] = Arrays.copyOf(colorData, 3);
       temp[i] = Arrays.copyOf(arr[i], 3);
     }
+    
+    /* Normalize readings */
     for (int i = 0; i < 5; i++) { // Normalize readings
       float norm = (float) Math
           .sqrt(Math.pow(temp[i][0], 2) + Math.pow(temp[i][1], 2) + Math.pow(temp[i][2], 2));
@@ -205,6 +210,7 @@ public class ColorClassification implements Runnable {
         arr[i][j] = arr[i][j] / norm;
       }
     }
+    /* Get the mean */
     for (int i = 0; i < 5; i++) { // Taking the average
       for (int j = 0; j < 3; j++) {
         RGB[j] += arr[i][j] / 5;

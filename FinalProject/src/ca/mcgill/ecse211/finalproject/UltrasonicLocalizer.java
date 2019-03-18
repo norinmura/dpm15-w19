@@ -3,7 +3,6 @@ package ca.mcgill.ecse211.finalproject;
 import java.util.Arrays;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
-import lejos.hardware.Sound;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.robotics.SampleProvider;
 
@@ -16,30 +15,30 @@ import lejos.robotics.SampleProvider;
  * rising edge is basically the same except the robot starts from facing the wall.
  * 
  * @author Floria Peng
- *
  */
 public class UltrasonicLocalizer implements Runnable {
-
+  
+  /* STATIC FIELDS */
   public static final int INFINITY_DISTANCE = 50; // The distance that the sensor consider the robot
                                                   // is not facing the wall
-  public static final int WALL_DISTANCE = 30; // The distance that the sensor consider the robot is
-                                              // facing the wall
-  public static boolean OPTION = true; // true for falling edge, false for rising edge
   public static final int FULL_TURN = 360; // 360 degree for a circle
   private static final int ACCELERATION = 3000; // The acceleration of the motor
 
+  /* PRIVATE FIELDS */
   private Odometer odometer; // The odometer instance
   private EV3LargeRegulatedMotor leftMotor; // The left motor of the robot
   private EV3LargeRegulatedMotor rightMotor; // The right motor of the robot
+  private SampleProvider us; // The sample provider for the ultrasonic sensor
+  private float[] usData; // The data buffer for the ultrasonic sensor reading
+  private Navigation navigation; // The instance of navigation
+  
+  /* FIELDS */
   double leftRadius; // The left wheel radius of the robot
   double rightRadius; // The right wheel radius of the robot
   double track; // The track of the robot (by measuring the distance between the center of both
                 // wheel)
 
-  private SampleProvider us; // The sample provider for the ultrasonic sensor
-  private float[] usData; // The data buffer for the ultrasonic sensor reading
-  private Navigation navigation; // The instance of navigation
-
+  /* CONSTANTS */
   int d = 35; // An arbitrary distance that the robot record the angle (first/last below)
   int k = 1; // To eliminate the noise
   double first = 0; // The first angle that falls into the band (d+/-k)
@@ -87,47 +86,14 @@ public class UltrasonicLocalizer implements Runnable {
    * @see java.lang.Runnable#run()
    */
   public void run() {
-    if (OPTION) { // Falling edge
-      navigation.turn(FULL_TURN); // The robot will rotate clockwise for a full turn until disrupted
-      while (rightMotor.isMoving() || leftMotor.isMoving()) {
-        if (filter() > INFINITY_DISTANCE) { // If the robot is not facing the wall
-          leftMotor.setAcceleration(ACCELERATION);
-          rightMotor.setAcceleration(ACCELERATION);
-          leftMotor.stop(true); // Stop the motors
-          rightMotor.stop(false);
-          Sound.beepSequenceUp();
-          break;
-        }
-        try {
-          Thread.sleep(50);
-        } catch (Exception e) {
-        }
-      }
+    if (filter() > INFINITY_DISTANCE) { // Falling edge
       fallingEdge(); // Call the fallingEdge method
     } else { // Rising edge
-      navigation.turn(-FULL_TURN); // The robot will rotate counter-clockwise for a full turn until
-                                   // disrupted
-      while (rightMotor.isMoving() || leftMotor.isMoving()) {
-        if (filter() < WALL_DISTANCE) { // If the robot is facing the wall
-          leftMotor.setAcceleration(ACCELERATION);
-          rightMotor.setAcceleration(ACCELERATION);
-          leftMotor.stop(true); // Stop the motors
-          rightMotor.stop(false);
-          Sound.beepSequenceUp();
-          break;
-        }
-        try {
-          Thread.sleep(50);
-        } catch (Exception e) {
-        }
-      }
       risingEdge(); // Call the risingEdge method
     }
-
     navigation.turnTo(-error); // Correct the angle of the robot
     odometer.position[2] = 0; // Reset the angle of the odometer
     odometer.setTheta(0); // Reset the angle of the odometerData
-
   }
 
   /**
