@@ -9,7 +9,6 @@ import lejos.robotics.SampleProvider;
  * red, green or yellow.
  * 
  * @author Floria Peng
- *
  */
 public class ColorClassification implements Runnable {
 

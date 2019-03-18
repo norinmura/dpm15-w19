@@ -1,6 +1,5 @@
 package ca.mcgill.ecse211.finalproject;
 
-import lejos.hardware.Sound;
 import lejos.hardware.motor.UnregulatedMotor;
 
 /**
@@ -8,7 +7,6 @@ import lejos.hardware.motor.UnregulatedMotor;
  * two different weight: light or heavy.
  * 
  * @author Floria Peng
- *
  */
 public class WeightCan implements Runnable {
 
@@ -18,11 +16,10 @@ public class WeightCan implements Runnable {
   private ColorClassification colorclassification; // used to call the method that gets the reading
                                                    // from Ultrasonic Sensor
   /* Constants */
-  private static final int ANGLE = 80; // angle to lift
-  private static final int MIN_POWER = 10; // The power to lift a light can but not the heavy can
-                                           // TODO
-  private static final int MAX_POWER = 30; // The power needed to lift a heavy can
-  private static final int WAIT_TIME = 50; // Time to wait before we request the ultrasonic sensor
+  private static final int ANGLE = 50; // angle to lift TODO
+  private static final int MIN_POWER = 16; // The power to lift a light can but not the heavy can
+  private static final int MAX_POWER = 32; // The power needed to lift a heavy can
+  private static final int WAIT_TIME = 1000; // Time to wait before we request the ultrasonic sensor
                                            // to say whether or not it still detects a can. TODO
   private static final int NEAR_SENSOR = 5; // threshold value to check that determines whether or
                                             // not the can is light
@@ -76,11 +73,14 @@ public class WeightCan implements Runnable {
    *        motor you use
    */
   void claw_close(int power) {
-    Sound.beep();
     weightMotor.resetTachoCount();
     weightMotor.setPower(power);
     while (Math.abs(weightMotor.getTachoCount() - lastTachoCount) < ANGLE) {
       weightMotor.forward();
+      try {
+        Thread.sleep(50);
+      } catch (Exception e) {
+      }
       if (!weightMotor.isMoving()) {
         break;
       }
@@ -96,6 +96,10 @@ public class WeightCan implements Runnable {
     lastTachoCount = weightMotor.getTachoCount();
     while (Math.abs(weightMotor.getTachoCount() - lastTachoCount) < ANGLE) {
       weightMotor.backward();
+      try {
+        Thread.sleep(50);
+      } catch (Exception e) {
+      }
       if (!weightMotor.isMoving()) {
         break;
       }

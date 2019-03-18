@@ -15,7 +15,6 @@ import lejos.robotics.SampleProvider;
  * rising edge is basically the same except the robot starts from facing the wall.
  * 
  * @author Floria Peng
- *
  */
 public class UltrasonicLocalizer implements Runnable {
   
@@ -40,7 +39,7 @@ public class UltrasonicLocalizer implements Runnable {
                 // wheel)
 
   /* CONSTANTS */
-  int d = 40; // An arbitrary distance that the robot record the angle (first/last below)
+  int d = 35; // An arbitrary distance that the robot record the angle (first/last below)
   int k = 1; // To eliminate the noise
   double first = 0; // The first angle that falls into the band (d+/-k)
   double last = 0; // The last angle that falls into the band (d+/-k)

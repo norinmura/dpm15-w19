@@ -2,7 +2,6 @@ package ca.mcgill.ecse211.finalproject;
 
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
-import lejos.hardware.Sound;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
 /**
@@ -12,7 +11,6 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
  * moving the other until it detects a line.
  * 
  * @author Floria Peng
- *
  */
 public class LightLocalizer implements Runnable {
 
@@ -127,9 +125,7 @@ public class LightLocalizer implements Runnable {
         odometer.position[2] = Math.toRadians(90);
         break;
     }
-    Sound.beep();
-    Sound.beep();
-    Sound.beep();
+    
   }
 
   /**

@@ -24,14 +24,13 @@ import lejos.robotics.SampleProvider;
  * corner and an upper right corner.
  * 
  * @author Floria Peng
- *
  */
 public class FinalProject {
 
   /* STATIC FIELDS */
 
   // ** Set these as appropriate for your team and current situation **
-  private static final String SERVER_IP = "192.168.2.31";
+  private static final String SERVER_IP = "192.168.2.22";
   private static final int TEAM_NUMBER = 15; // Team 15
 
   // Enable/disable printing of debug info from the WiFi class
@@ -62,6 +61,7 @@ public class FinalProject {
   public static final double TRACK = 11.93; // The width of the robot measured
   public static final int FULL_TURN = 360; // 360 degree for a circle
   public static final double TILE_SIZE = 30.48; // The tile size used for demo
+  public static final double TUNNEL_ADJ = 10; // More distance when traveling through the tunnel
 
   /**
    * The main method for the Final Project. This class will start the threads used for the program.
@@ -240,7 +240,7 @@ public class FinalProject {
     Thread odoDisplayThread = new Thread(odometryDisplay);
     odoDisplayThread.start();
 
-    // Start the thread for us localizer
+/*    // Start the thread for us localizer
     Thread usThread = new Thread(uslocalizer);
     usThread.start();
     usThread.join();
@@ -249,11 +249,14 @@ public class FinalProject {
     Thread lightThread = new Thread(lightlocalizer);
     lightThread.start();
     lightThread.join();
-
+*/
     Sound.beep();
+    
+    navigation.roundSearch(0, 0, -180);
+    Sound.beepSequence();
 
     /* Generating the search map */
-    int[] upperRight = {sz_ur_x, sz_ur_y};
+/*    int[] upperRight = {sz_ur_x, sz_ur_y};
     int[] lowerLeft = {sz_ll_x, sz_ll_y};
     int horizontal = upperRight[0] - lowerLeft[0] + 1; // The x nodes that will be traveled
     int vertical = upperRight[1] - lowerLeft[1] + 1; // The y nodes that will be traveled
@@ -289,18 +292,20 @@ public class FinalProject {
         fullPath[i][2] = 4;
       }
     }
-
+*/
     /* Traverse the search map and navigate */
     // Traveling to island and iterating the map TODO
-    int i = 0;
+/*    int i = 0;
     if (redTeam == TEAM_NUMBER) {
-      navigation.travelTo(1 * TILE_SIZE, (tn_ll_y + tn_ur_y) / 2 * TILE_SIZE);
-      navigation.travelTo((tn_ur_x + (1 / 2)) * TILE_SIZE, (tn_ll_y + tn_ur_y) / 2 * TILE_SIZE);
-      navigation.travelTo((tn_ur_x + (1 / 2)) * TILE_SIZE, fullPath[i][0] * TILE_SIZE);
+      navigation.travelTo(1 * TILE_SIZE, (tn_ll_y + tn_ur_y) * 0.5 * TILE_SIZE);
+      navigation.travelTo((tn_ll_x * TILE_SIZE) + TUNNEL_ADJ, (tn_ll_y + tn_ur_y) * 0.5 * TILE_SIZE);
+      navigation.runTo((tn_ur_x + 0.5) * TILE_SIZE, (tn_ll_y + tn_ur_y) * 0.5 * TILE_SIZE);
+      navigation.travelTo((tn_ur_x + 0.5) * TILE_SIZE, fullPath[i][0] * TILE_SIZE);
       navigation.travelTo(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE);
       Sound.beep();
       Sound.twoBeeps();
       Sound.twoBeeps();
+      navigation.turnTo(FULL_TURN / 4);
       navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE, -FULL_TURN / 4);
       i++;
       while (i < fullPath.length) {
@@ -318,7 +323,7 @@ public class FinalProject {
         }
       }
     }
-
+*/
     /* Waiting for exit */
     // Wait here forever until button pressed to terminate the robot
     Button.waitForAnyPress();

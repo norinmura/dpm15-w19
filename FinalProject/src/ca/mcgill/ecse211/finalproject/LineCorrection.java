@@ -6,7 +6,6 @@ import lejos.robotics.SampleProvider;
  * This class implements differential filter for the color sensor detecting lines.
  * 
  * @author Floria Peng
- *
  */
 public class LineCorrection {
 
