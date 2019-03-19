@@ -16,8 +16,9 @@ import lejos.hardware.motor.EV3MediumRegulatedMotor;
 public class Navigation {
 
   /* STATIC FIELDS */
-  public static final int FORWARD_SPEED = 150; // The forward speed for the robot
-  public static final int ROTATE_SPEED = 120; // The rotation speed for the robot
+  public static final int FORWARD_SPEED = 170; // The forward speed for the robot
+  public static final int RUN_SPEED = 200; // The run speed for the robot
+  public static final int ROTATE_SPEED = 140; // The rotation speed for the robot
   private static final int ACCELERATION = 3000; // The acceleration of the motor
   private static final double SCAN_DISTANCE = 7; // The detect a can distance
   private static final double APPROACH_CAN = 4; // Get closer to the can
@@ -177,8 +178,8 @@ public class Navigation {
 
     turnTo(angle); // Call the turnTo method
 
-    leftMotor.setSpeed(FORWARD_SPEED);
-    rightMotor.setSpeed(FORWARD_SPEED);
+    leftMotor.setSpeed(RUN_SPEED);
+    rightMotor.setSpeed(RUN_SPEED);
     // Travel the robot to the destination point
     leftMotor.rotate(convertDistance(leftRadius, travel), true);
     rightMotor.rotate(convertDistance(rightRadius, travel), false);
@@ -409,8 +410,8 @@ public class Navigation {
    */
   void move(double distance) {
 
-    leftMotor.setSpeed(FORWARD_SPEED + 20);
-    rightMotor.setSpeed(FORWARD_SPEED + 20);
+    leftMotor.setSpeed(FORWARD_SPEED + 80);
+    rightMotor.setSpeed(FORWARD_SPEED + 80);
     leftMotor.rotate(convertDistance(leftRadius, distance), true);
     rightMotor.rotate(convertDistance(rightRadius, distance), true);
 
@@ -611,8 +612,8 @@ public class Navigation {
    */
   void turn(double theta) {
 
-    leftMotor.setSpeed(ROTATE_SPEED + 20);
-    rightMotor.setSpeed(ROTATE_SPEED + 20);
+    leftMotor.setSpeed(ROTATE_SPEED + 50);
+    rightMotor.setSpeed(ROTATE_SPEED + 50);
 
     leftMotor.rotate(convertAngle(leftRadius, track, theta), true);
     rightMotor.rotate(-convertAngle(rightRadius, track, theta), true); // The true is to ensure the
