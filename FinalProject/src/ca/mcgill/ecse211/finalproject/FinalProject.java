@@ -72,43 +72,89 @@ import lejos.robotics.SampleProvider;
  * @author Floria Peng
  */
 public class FinalProject {
-
+  
+  /* STATIC FIELDS */
   // Set these as appropriate for your team and current situation
-  /* The IP address of the server */
+  /**
+   * The IP address of the server
+   */
   private static final String SERVER_IP = "192.168.2.19";
-  /* The team number of the user */
+  /**
+   * The team number of the user
+   */
   private static final int TEAM_NUMBER = 15; // Team 15
 
   // Enable/disable printing of debug info from the WiFi class
-  /* Control the printing */
+  /**
+   * Control the printing
+   */
   private static final boolean ENABLE_DEBUG_WIFI_PRINT = true;
 
   // Motors
   // Instantiate motors; left right and sensor motor to rotate the color sensor.
+  /**
+   * The large regulated left motor
+   */
   private static final EV3LargeRegulatedMotor leftMotor =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
+  /**
+   * The large regulated right motor
+   */
   private static final EV3LargeRegulatedMotor rightMotor =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("B"));
+  /**
+   * The medium regulated sensor motor that carries the color sensor arm
+   */
   private static final EV3MediumRegulatedMotor sensorMotor =
       new EV3MediumRegulatedMotor(LocalEV3.get().getPort("C"));
+  /**
+   * The unregulated weight motor that carries the claw
+   */
   private static final UnregulatedMotor weightMotor =
       new UnregulatedMotor(LocalEV3.get().getPort("D"));
 
-  /* Ports */
+  /**
+   * Ultrasonic sensor port
+   */
   private static final Port usPort = LocalEV3.get().getPort("S3"); // Ultrasonic sensor port
+  /**
+   * The left light sensor port
+   */
   private static final Port portColor1 = LocalEV3.get().getPort("S1"); // Light sensor port1
+  /**
+   * The right light sensor port
+   */
   private static final Port portColor2 = LocalEV3.get().getPort("S2"); // Light sensor port2
+  /**
+   * The color sensor on the arm port
+   */
   private static final Port colorPort = LocalEV3.get().getPort("S4"); // Light sensor port for color
                                                                       // detection
-  /* LCD */
+  /**
+   * The LCD display
+   */
   private static final TextLCD lcd = LocalEV3.get().getTextLCD(); // The LCD display
 
-  /* CONSTANTS */
+  /**
+   * The radius of the wheels
+   */
   public static final double WHEEL_RAD = 2.1; // The radius of the wheel
+  /**
+   * The track width of the robot
+   */
   public static final double TRACK = 13.20; // The width of the robot measured
+  /**
+   * The angle for a full turn is 360 degrees
+   */
   public static final int FULL_TURN = 360; // 360 degree for a circle
+  /**
+   * The tile size for the board that the robot is running on
+   */
   public static final double TILE_SIZE = 30.48; // The tile size used for demo
-  public static final double TUNNEL_ADJ = 10; // More distance when traveling through the tunnel
+  /**
+   * The tunnel adjustment
+   */
+  public static final double TUNNEL_ADJ = 2; // More distance when traveling through the tunnel TODO
 
   /**
    * The main method for the Final Project. This class will start the threads used for the program.
@@ -164,7 +210,7 @@ public class FinalProject {
 
     // Connect to server and get the data, catching any errors that might occur
     try {
-      /*
+      /**
        * getData() will connect to the server and wait until the user/TA presses the "Start" button
        * in the GUI on their laptop with the data filled in. Once it's waiting, you can kill it by
        * pressing the upper left hand corner button (back/escape) on the EV3. getData() will throw
@@ -274,8 +320,6 @@ public class FinalProject {
     LightLocalizer lightlocalizer = new LightLocalizer(odometer, leftMotor, rightMotor, WHEEL_RAD,
         WHEEL_RAD, TRACK, navigation, linecorrection, corner); // instance of LightLocalizer
 
-    Sound.beepSequenceUp(); // Shows its ready
-
     /* STARTING THREADS */
 
     // Starting odometer thread
@@ -287,14 +331,14 @@ public class FinalProject {
     odoDisplayThread.start();
 
     // Start the thread for us localizer
-    Thread usThread = new Thread(uslocalizer);
+    /*Thread usThread = new Thread(uslocalizer);
     usThread.start();
     usThread.join();
 
     // Start the thread for light localizer
     Thread lightThread = new Thread(lightlocalizer);
     lightThread.start();
-    lightThread.join();
+    lightThread.join();*/
 
     Sound.beep();
 
@@ -313,7 +357,7 @@ public class FinalProject {
           fullPath[i * horizontal + j][1] = lowerLeft[1] + i;
         } else {
           fullPath[i * horizontal + j][0] = upperRight[0] - j;
-          fullPath[i * horizontal + j][1] = upperRight[1] + i;
+          fullPath[i * horizontal + j][1] = lowerLeft[1] + i;
         }
       }
       direction *= -1; // Traveling to the left
@@ -335,41 +379,49 @@ public class FinalProject {
         fullPath[i][2] = 4;
       }
     }
+    
+    for (int i = 0; i < fullPath.length; i++) {
+      System.out.println("x: " + fullPath[i][0] + "=====" + "y: " + fullPath[i][1] + "=====" + fullPath[i][2]);
+    }
 
     /* Traverse the search map and navigate */
     // Traveling to island and iterating the map TODO
-    int i = 0;
+    /*int i = 0;
     if (redTeam == TEAM_NUMBER) {
       navigation.travelTo(1 * TILE_SIZE, tn_ll_y * TILE_SIZE); // up
-
-      // Do the localization to fix the x coordinate
-      navigation.correction = false;
       try {
         Thread.sleep(50);
       } catch (Exception e) {
       }
-      navigation.rotate(FULL_TURN / 4);
-      navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer
-                                  // reading
+      navigation.travelTo((tn_ll_x - 1) * TILE_SIZE, tn_ll_y * TILE_SIZE); // right
+      try {
+        Thread.sleep(50);
+      } catch (Exception e) {
+      }
+      
+      // Do the localization again
+      navigation.correction = false;
+      navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
       lightlocalizer.correctAngle(); // when a line is detected, correct angle
       navigation.back(0, 9.0); // Go back the offset distance between the wheels and sensors
       navigation.rotate(-FULL_TURN / 4);
+      navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
+      lightlocalizer.correctAngle(); // when a line is detected, correct angle
+      navigation.back(0, 9.0); // Go back the offset distance between the wheels and sensors
       odometer.position[2] = Math.toRadians(0);
-      odometer.setXYT(1 * TILE_SIZE, tn_ll_y * TILE_SIZE, 0);
-      navigation.correction = true;
+      odometer.setXYT((tn_ll_x - 1) * TILE_SIZE, tn_ll_y * TILE_SIZE, 0);
       try {
         Thread.sleep(50);
       } catch (Exception e) {
       }
-
+      navigation.correction = true;
+      
       // Start the navigation again
-      navigation.travelTo(1 * TILE_SIZE, (tn_ll_y + tn_ur_y) * 0.5 * TILE_SIZE); // up
-      navigation.travelTo((tn_ll_x * TILE_SIZE) + TUNNEL_ADJ,
-          (tn_ll_y + tn_ur_y) * 0.5 * TILE_SIZE); // right
+      navigation.travelTo((tn_ll_x - 1) * TILE_SIZE, (tn_ll_y + tn_ur_y) * 0.5 * TILE_SIZE + TUNNEL_ADJ);
 
       // Run without correction to travel through the tunnel
       navigation.correction = false;
-      navigation.runTo((tn_ur_x + 0.5) * TILE_SIZE, (tn_ll_y + tn_ur_y) * 0.5 * TILE_SIZE);
+      navigation.runTo((tn_ur_x + 0.5) * TILE_SIZE, (tn_ll_y + tn_ur_y) * 0.5 * TILE_SIZE + TUNNEL_ADJ);
       
       // After the tunnel, do the localization again
       navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
@@ -379,7 +431,12 @@ public class FinalProject {
       navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
       lightlocalizer.correctAngle(); // when a line is detected, correct angle
       navigation.back(0, 9.0); // Go back the offset distance between the wheels and sensors
-      odometer.setXYT((tn_ur_x + 1) * TILE_SIZE, (tn_ll_y - 1), FULL_TURN / 2);
+      odometer.position[2] = Math.toRadians(FULL_TURN / 2);
+      odometer.setXYT((tn_ur_x + 1) * TILE_SIZE, (tn_ll_y - 1) * TILE_SIZE, FULL_TURN / 2);
+      try {
+        Thread.sleep(50);
+      } catch (Exception e) {
+      }
       navigation.correction = true;
 
       // Travel to the lower left corner of the search zone
@@ -387,6 +444,10 @@ public class FinalProject {
       navigation.travelTo(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE); // right
       for (int j = 0; j < 5; j++) { // Beeps when it arrives
         Sound.beep();
+        try {
+          Thread.sleep(50);
+        } catch (Exception e) {
+        }
       }
       // Search can at the lower left corner
       navigation.turnTo(FULL_TURN / 4); // facing right
@@ -396,6 +457,7 @@ public class FinalProject {
 
       // Start searching the search zone
       while (i < fullPath.length) {
+        System.out.println("want to move here: x: " + fullPath[i][0] + ", y: " + fullPath[i][1]);
         navigation.moveTo(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE);
         if (fullPath[i][2] == 4) { // straight line point
           if (odometer.getXYT()[2] < 180) {
@@ -412,11 +474,19 @@ public class FinalProject {
           navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE,
               FULL_TURN / 4);
         }
+        i++;
       }
 
       // After searching return to the upper right corner
       navigation.runTo(sz_ur_x * TILE_SIZE, sz_ur_y * TILE_SIZE);
-    }
+      for (int j = 0; j < 5; j++) { // Beeps when it arrives
+        Sound.beep();
+        try {
+          Thread.sleep(50);
+        } catch (Exception e) {
+        }
+      }
+    }*/
 
     /* Waiting for exit */
     // Wait here forever until button pressed to terminate the robot

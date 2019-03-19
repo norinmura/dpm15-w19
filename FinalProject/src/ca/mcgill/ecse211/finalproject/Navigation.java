@@ -16,54 +16,169 @@ import lejos.hardware.motor.EV3MediumRegulatedMotor;
 public class Navigation {
 
   /* STATIC FIELDS */
+  /**
+   * The forward speed for the robot
+   */
   public static final int FORWARD_SPEED = 170; // The forward speed for the robot
-  public static final int RUN_SPEED = 200; // The run speed for the robot
+  /**
+   * The run speed for the robot to travel through the tunnel
+   */
+  public static final int RUN_SPEED = 220; // The run speed for the robot
+  /**
+   * The rotating speed of the robot
+   */
   public static final int ROTATE_SPEED = 140; // The rotation speed for the robot
+  /**
+   * The acceleration when the robot stops
+   */
   private static final int ACCELERATION = 3000; // The acceleration of the motor
+  /**
+   * The distance that the robot think there is an object in front of it
+   */
   private static final double SCAN_DISTANCE = 7; // The detect a can distance
+  /**
+   * The distance that the robot move to go closer to the can
+   */
   private static final double APPROACH_CAN = 4; // Get closer to the can
+  /**
+   * The length of the robot
+   */
   private static final double ROBOT_LENGTH = 10; // The length of the robot
-  private static final int TUNE = 440; // The sound frequence
+  /**
+   * The angle of a full turn is 360 degrees
+   */
   public static final int FULL_TURN = 360; // 360 degree for a circle
+  /**
+   * The tile size of the board that the robot is running on
+   */
   public static final double TILE_SIZE = 30.48; // The tile size used for demo
 
   /* PRIVATE FIELDS */
+  /**
+   * The Odometer instance
+   */
   private Odometer odometer; // The odometer instance
+  /**
+   * The LineCorrection instance
+   */
   private LineCorrection linecorrection; // The instance of line correction
+  /**
+   * The leftMotor instance
+   */
   private EV3LargeRegulatedMotor leftMotor; // The left motor of the robot
+  /**
+   * The rightMotor instance
+   */
   private EV3LargeRegulatedMotor rightMotor; // The right motor of the robot
+  /**
+   * The sensorMotor instance
+   */
   private EV3MediumRegulatedMotor sensorMotor; // The sensor motor of the robot
+  /**
+   * The ColorClassification instance
+   */
   private ColorClassification colorclassification; // The ColorClassification instance
+  /**
+   * The WeightCan instance
+   */
   private WeightCan weightcan; // The WeightCan instance
+  
+  /* FIELDS */
+  /**
+   * The left wheel radius
+   */
   double leftRadius; // The left wheel radius of the robot
+  /**
+   * The right wheel radius
+   */
   double rightRadius; // The right wheel radius of the robot
+  /**
+   * The track width
+   */
   double track; // The track of the robot (by measuring the distance between the center of both
                 // wheel)
 
-  /* FIELDS */
+  /**
+   * The current x position before the robot moves
+   */
   double lastx; // The last x position of the robot
+  /**
+   * The current y position before the robot moves
+   */
   double lasty; // The last y position of the robot
+  /**
+   * The current theta angle before the robot moves
+   */
   double lasttheta; // The last angle of the robot
+  /**
+   * The traveling distance between the current point with the next map point
+   */
   double travel; // The traveling distance between the current point with the next map point
-  double distance; // The distance calculated to go backs
+  /**
+   * The distance calculated to go move
+   */
+  double distance; // The distance calculated to go move
+  /**
+   * The angle to which the robot should turn to get to the next map point
+   */
   double angle; // The angle to which the robot should turn to get to the next map point
+  /**
+   * The angle that the robot should actually rotate
+   */
   double theta; // The angle that the robot should actually rotate
+  /**
+   * The front ultrasonic sensor distance detected
+   */
   double warning; // The front ultrasonic sensor distance detected
+  /**
+   * True for the robot is traveling to next point
+   */
   boolean isNavigating = false; // True for the robot is traveling to next point
 
+  /**
+   * The time of the light sensor
+   */
   long[] time = new long[2]; // The time of the light sensor
+  /**
+   * The detection of the line of the two light sensors
+   */
   boolean[] line = {false, false}; // The detection of the line of the two light sensors
-  int sound_time = 0;
+  /**
+   * true for the object detected is not a can
+   */
   boolean not_can = false;
+  /**
+   * true for detecting a can
+   */
   boolean get_can = false;
+  /**
+   * The angles that the robot uses to find the can
+   */
   double[] angles = new double[3];
+  /**
+   * The distance that the robot uses to find the can
+   */
   double[] distances = new double[3];
+  /**
+   * The target can color
+   */
   double target_color = -1;
+  /**
+   * The angle that the roundSearch method should end
+   */
   double end_angle = 0; // The angle left for rotate search
-  int first_come = 0;
+  /**
+   * The distance of the can that the Ultrasonic sensor detects during the roundSearch
+   */
   double round_detect = 0;
+  /**
+   * The after line correction, before next correction delay
+   */
   int delay = 20; // The after line correction, before next correction delay
-  boolean correction = true; // true for 
+  /**
+   * To determine whether to do the angle correction or not
+   */
+  boolean correction = true;
 
   /**
    * The constructor for the Navigation class
@@ -245,8 +360,7 @@ public class Navigation {
    * This method can be break. Detect can, used for approaching the can found during the rotate
    * search.
    * 
-   * @param x - The x coordinate for the next point
-   * @param y - The y coordinate for the next point
+   * @param distance - The distance to go
    * 
    * @return - void method, no return
    */
@@ -336,7 +450,7 @@ public class Navigation {
    * 
    * @param x - The x point that will be going to.
    * @param y - The y point that will be going to.
-   * @param position - The type of the map point (pre-defined in the SearchCan class)
+   * @param method - The type of the map point (pre-defined in the SearchCan class)
    */
   void correctAngle(double x, double y, int method) {
     if (!correction) {
@@ -344,7 +458,6 @@ public class Navigation {
     }
     /* INITIALIZE VARIABLES */
     boolean key = true;
-    first_come = 0;
     while (key) {
       if (Math.sqrt(Math.pow((odometer.getXYT()[0] - x), 2)
           + Math.pow((odometer.getXYT()[1] - y), 2)) < TILE_SIZE / 2) {
@@ -361,15 +474,9 @@ public class Navigation {
       line[1] = linecorrection.filter2();
       if (line[0]) { // If the black line is detected, the robot will stop
         leftMotor.stop(true);
-        if (first_come == 0) {
-          first_come = 1; // Left wheel first come
-        }
       }
       if (line[1]) {
         rightMotor.stop(true);
-        if (first_come == 0) {
-          first_come = 2;
-        }
       }
       if (!leftMotor.isMoving() && !rightMotor.isMoving()) {
         key = false;
@@ -390,7 +497,6 @@ public class Navigation {
           odometer.setTheta(270);
           odometer.position[2] = Math.toRadians(270);
         }
-        Sound.beep();
         if (method == 1) {
           delay = 0;
           moveTo(x, y);
@@ -406,12 +512,12 @@ public class Navigation {
    * 
    * This method simply moves the robot forward to a given distance
    * 
-   * @param distance
+   * @param distance - The distance to move
    */
   void move(double distance) {
 
-    leftMotor.setSpeed(FORWARD_SPEED + 80);
-    rightMotor.setSpeed(FORWARD_SPEED + 80);
+    leftMotor.setSpeed(FORWARD_SPEED + 50);
+    rightMotor.setSpeed(FORWARD_SPEED + 50);
     leftMotor.rotate(convertDistance(leftRadius, distance), true);
     rightMotor.rotate(convertDistance(rightRadius, distance), true);
 
@@ -440,29 +546,6 @@ public class Navigation {
 
   /**
    * <p>
-   * This method is the forward method of the robot. The forward distance is calculated by the x and
-   * y parameter passed to this method (Euclidean distance).
-   * 
-   * <p>
-   * This method cannot be break
-   * 
-   * @param x - The x distance the robot should move
-   * @param y - The y distance the robot should move
-   */
-  void forward(double x, double y, int first_come) {
-    if (first_come == 1) {
-      forward(x, y);
-    } else {
-      distance = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)); // The travel distance
-      rightMotor.setSpeed(FORWARD_SPEED);
-      leftMotor.setSpeed(FORWARD_SPEED);
-      rightMotor.rotate(convertDistance(leftRadius, distance), true);
-      leftMotor.rotate(convertDistance(rightRadius, distance), false);
-    }
-  }
-
-  /**
-   * <p>
    * This method is the back method of the robot. The forward distance is calculated by the x and y
    * parameter passed to this method (Euclidean distance). And the robot will travel back this
    * distance.
@@ -477,8 +560,8 @@ public class Navigation {
 
     distance = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)); // The travel distance
 
-    leftMotor.setSpeed(FORWARD_SPEED);
-    rightMotor.setSpeed(FORWARD_SPEED);
+    leftMotor.setSpeed(FORWARD_SPEED + 50);
+    rightMotor.setSpeed(FORWARD_SPEED + 50);
     leftMotor.rotate(-convertDistance(leftRadius, distance), true);
     rightMotor.rotate(-convertDistance(rightRadius, distance), false);
 
@@ -516,6 +599,10 @@ public class Navigation {
    * This method implements the round search of the can. The robot will self-rotate (up to 360
    * degrees) until it sees a can, and then it calls the goTo(s, y) method to approach and detect
    * the can.
+   * 
+   * @param x - The x distance the robot should move
+   * @param y - The y distance the robot should move
+   * @param angle - The turning angle
    */
   void roundSearch(double x, double y, double angle) {
     round_detect = 0;
@@ -577,10 +664,9 @@ public class Navigation {
    * <p>
    * This method cannot be break
    * 
-   * @param theta - The angle that the robot should rotate to
+   * @param angle - The angle that the robot should rotate to
    */
   void turnTo(double angle) {
-    Sound.beep();
 
     lasttheta = odometer.getXYT()[2]; // Update the last theta of the robot
     theta = angle - lasttheta; // The angle that the robot should actually rotate
@@ -646,7 +732,7 @@ public class Navigation {
    * This method returns true if another thread has called travelTo(), forward(), back(), turn(),
    * rotate() or turnTo() and the method has yet to return; false otherwise.
    * 
-   * @return
+   * @return - If it the robot is navigating
    */
   boolean isNavigating() {
 
@@ -662,9 +748,9 @@ public class Navigation {
    * This method allows the conversion of a distance to the total rotation of each wheel need to
    * cover that distance.
    * 
-   * @param radius
-   * @param distance
-   * @return
+   * @param radius - wheel radius
+   * @param distance - traveling distance
+   * @return - The converted distance
    */
   private static int convertDistance(double radius, double distance) {
     // convert from radius and distance to distance
@@ -672,10 +758,10 @@ public class Navigation {
   }
 
   /**
-   * @param radius
-   * @param width
-   * @param angle
-   * @return
+   * @param radius - wheel radius
+   * @param width - track width
+   * @param angle - turning angle
+   * @return - The distance calculated by the angle
    */
   private static int convertAngle(double radius, double width, double angle) {
     // convert from radius angle and width to a distance
