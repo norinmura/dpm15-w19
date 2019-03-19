@@ -105,7 +105,7 @@ public class FinalProject {
 
   /* CONSTANTS */
   public static final double WHEEL_RAD = 2.1; // The radius of the wheel
-  public static final double TRACK = 13.15; // The width of the robot measured
+  public static final double TRACK = 13.20; // The width of the robot measured
   public static final int FULL_TURN = 360; // 360 degree for a circle
   public static final double TILE_SIZE = 30.48; // The tile size used for demo
   public static final double TUNNEL_ADJ = 10; // More distance when traveling through the tunnel
@@ -340,46 +340,81 @@ public class FinalProject {
     // Traveling to island and iterating the map TODO
     int i = 0;
     if (redTeam == TEAM_NUMBER) {
-      navigation.travelTo(1 * TILE_SIZE, tn_ll_y * 0.5 * TILE_SIZE); // up
+      navigation.travelTo(1 * TILE_SIZE, tn_ll_y * TILE_SIZE); // up
+
+      // Do the localization to fix the x coordinate
       navigation.correction = false;
-      
+      try {
+        Thread.sleep(50);
+      } catch (Exception e) {
+      }
       navigation.rotate(FULL_TURN / 4);
       navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer
-      // reading
+                                  // reading
       lightlocalizer.correctAngle(); // when a line is detected, correct angle
       navigation.back(0, 9.0); // Go back the offset distance between the wheels and sensors
       navigation.rotate(-FULL_TURN / 4);
-      
+      odometer.position[2] = Math.toRadians(0);
+      odometer.setXYT(1 * TILE_SIZE, tn_ll_y * TILE_SIZE, 0);
       navigation.correction = true;
+      try {
+        Thread.sleep(50);
+      } catch (Exception e) {
+      }
+
+      // Start the navigation again
       navigation.travelTo(1 * TILE_SIZE, (tn_ll_y + tn_ur_y) * 0.5 * TILE_SIZE); // up
       navigation.travelTo((tn_ll_x * TILE_SIZE) + TUNNEL_ADJ,
           (tn_ll_y + tn_ur_y) * 0.5 * TILE_SIZE); // right
+
+      // Run without correction to travel through the tunnel
       navigation.correction = false;
-      // Run without correction
       navigation.runTo((tn_ur_x + 0.5) * TILE_SIZE, (tn_ll_y + tn_ur_y) * 0.5 * TILE_SIZE);
+      
+      // After the tunnel, do the localization again
+      navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
+      lightlocalizer.correctAngle(); // when a line is detected, correct angle
+      navigation.back(0, 9.0); // Go back the offset distance between the wheels and sensors
+      navigation.rotate(FULL_TURN / 4);
+      navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
+      lightlocalizer.correctAngle(); // when a line is detected, correct angle
+      navigation.back(0, 9.0); // Go back the offset distance between the wheels and sensors
+      odometer.setXYT((tn_ur_x + 1) * TILE_SIZE, (tn_ll_y - 1), FULL_TURN / 2);
       navigation.correction = true;
-      navigation.travelTo((tn_ur_x + 0.5) * TILE_SIZE, fullPath[i][1] * TILE_SIZE); // down
+
+      // Travel to the lower left corner of the search zone
+      navigation.travelTo((tn_ur_x + 1) * TILE_SIZE, fullPath[i][1] * TILE_SIZE); // down
       navigation.travelTo(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE); // right
-      Sound.beep();
-      Sound.twoBeeps();
-      Sound.twoBeeps();
-      /*navigation.turnTo(FULL_TURN / 4); // facing right
-      navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE, -FULL_TURN / 4);
+      for (int j = 0; j < 5; j++) { // Beeps when it arrives
+        Sound.beep();
+      }
+      // Search can at the lower left corner
+      navigation.turnTo(FULL_TURN / 4); // facing right
+      navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE,
+          -FULL_TURN / 4);
       i++;
+
+      // Start searching the search zone
       while (i < fullPath.length) {
         navigation.moveTo(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE);
-        if (fullPath[i][2] == 4) {
+        if (fullPath[i][2] == 4) { // straight line point
           if (odometer.getXYT()[2] < 180) {
-            navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE, -FULL_TURN / 4);
+            navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE,
+                -FULL_TURN / 4);
           } else {
-            navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE, FULL_TURN / 4);
+            navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE,
+                FULL_TURN / 4);
           }
-        } else if (fullPath[i][2] == 1) {
-          navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE, -FULL_TURN / 4);
+        } else if (fullPath[i][2] == 1) { // right upper point
+          navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE,
+              -FULL_TURN / 4);
         } else if (fullPath[i][2] == 3) {
-          navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE, FULL_TURN / 4);
+          navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE,
+              FULL_TURN / 4);
         }
-      }*/
+      }
+
+      // After searching return to the upper right corner
       navigation.runTo(sz_ur_x * TILE_SIZE, sz_ur_y * TILE_SIZE);
     }
 

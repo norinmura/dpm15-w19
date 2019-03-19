@@ -141,6 +141,10 @@ public class Navigation {
         rotate(FULL_TURN / 2);
         moveTo(x, y);
       }
+      try {
+        Thread.sleep(50);
+      } catch (Exception e) {
+      }
     }
 
   }
@@ -173,11 +177,11 @@ public class Navigation {
 
     turnTo(angle); // Call the turnTo method
 
-    rightMotor.setSpeed(FORWARD_SPEED);
     leftMotor.setSpeed(FORWARD_SPEED);
+    rightMotor.setSpeed(FORWARD_SPEED);
     // Travel the robot to the destination point
-    rightMotor.rotate(convertDistance(leftRadius, travel), true);
-    leftMotor.rotate(convertDistance(rightRadius, travel), false);
+    leftMotor.rotate(convertDistance(leftRadius, travel), true);
+    rightMotor.rotate(convertDistance(rightRadius, travel), false);
 
   }
 
@@ -207,19 +211,23 @@ public class Navigation {
     travel = Math.sqrt(Math.pow(x - lastx, 2) + Math.pow(y - lasty, 2)); // The travel distance
     angle = Math.atan2(x - lastx, y - lasty) * 180 / Math.PI; // The angle that the robot should
                                                               // rotate to
-    
+
     turnTo(angle); // Call the turnTo method
 
-    rightMotor.setSpeed(FORWARD_SPEED);
     leftMotor.setSpeed(FORWARD_SPEED);
+    rightMotor.setSpeed(FORWARD_SPEED);
     // Travel the robot to the destination point
-    rightMotor.rotate(convertDistance(leftRadius, travel), true);
-    leftMotor.rotate(convertDistance(rightRadius, travel), true);
+    leftMotor.rotate(convertDistance(leftRadius, travel), true);
+    rightMotor.rotate(convertDistance(rightRadius, travel), true);
 
     // TODO error, only correct once
     while (leftMotor.isMoving() || rightMotor.isMoving()) {
       correctAngle(x, y, 2); // The third variable is to indicate which method is calling
                              // correctAngle
+      try {
+        Thread.sleep(50);
+      } catch (Exception e) {
+      }
     }
 
   }
@@ -251,6 +259,10 @@ public class Navigation {
 
     while (leftMotor.isMoving() || rightMotor.isMoving()) { // If the robot is moving
       detectCan();
+      try {
+        Thread.sleep(50);
+      } catch (Exception e) {
+      }
     }
   }
 
@@ -261,7 +273,6 @@ public class Navigation {
   void detectCan() {
     /* INITIALIZE VARIABLES */
     get_can = false;
-    target_color = -1;
 
     warning = colorclassification.median_filter();
     if (warning < SCAN_DISTANCE) {
@@ -296,12 +307,13 @@ public class Navigation {
       sensorMotor.rotate(FULL_TURN, true); // The sensor motor will rotate less than 180
                                            // degree (as we are using a gear)
       if (colorclassification.color == target_color) {
-        Sound.twoBeeps();
-        Sound.twoBeeps();
-        Sound.twoBeeps();
-        Sound.twoBeeps();
-        Sound.twoBeeps();
-        return; // TODO
+        for (int i = 0; i < 10; i++) {
+          Sound.beep();
+          try {
+            Thread.sleep(50);
+          } catch (Exception e) {
+          }
+        }
       }
       get_can = true; // The robot is getting a can
     }
@@ -339,7 +351,6 @@ public class Navigation {
       }
       while (delay < 20) {
         delay++;
-        System.out.println("delay is " + delay);
         try {
           Thread.sleep(50);
         } catch (Exception e) {
@@ -378,6 +389,7 @@ public class Navigation {
           odometer.setTheta(270);
           odometer.position[2] = Math.toRadians(270);
         }
+        Sound.beep();
         if (method == 1) {
           delay = 0;
           moveTo(x, y);
@@ -423,6 +435,29 @@ public class Navigation {
     leftMotor.rotate(convertDistance(leftRadius, distance), true);
     rightMotor.rotate(convertDistance(rightRadius, distance), false);
 
+  }
+
+  /**
+   * <p>
+   * This method is the forward method of the robot. The forward distance is calculated by the x and
+   * y parameter passed to this method (Euclidean distance).
+   * 
+   * <p>
+   * This method cannot be break
+   * 
+   * @param x - The x distance the robot should move
+   * @param y - The y distance the robot should move
+   */
+  void forward(double x, double y, int first_come) {
+    if (first_come == 1) {
+      forward(x, y);
+    } else {
+      distance = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)); // The travel distance
+      rightMotor.setSpeed(FORWARD_SPEED);
+      leftMotor.setSpeed(FORWARD_SPEED);
+      rightMotor.rotate(convertDistance(leftRadius, distance), true);
+      leftMotor.rotate(convertDistance(rightRadius, distance), false);
+    }
   }
 
   /**
@@ -490,7 +525,6 @@ public class Navigation {
 
     leftMotor.setSpeed(ROTATE_SPEED);
     rightMotor.setSpeed(ROTATE_SPEED);
-    System.out.println("angle to go is " + angle);
     leftMotor.rotate(convertAngle(leftRadius, track, angle), true);
     rightMotor.rotate(-convertAngle(rightRadius, track, angle), true);
     // The true is to ensure the method can be interrupted.
@@ -519,11 +553,9 @@ public class Navigation {
         goTo(distances[2] * 1.5); // Go towards the can
         if (get_can) { // If this is a can, returned in detectCan
           weightcan.claw_close(30); // power 30
-          System.out.println("get_can: " + get_can);
         }
         backTo(x, y);
         if (get_can) { // If this is a can
-          System.out.println("get_can: " + get_can);
           rotate(FULL_TURN / 2);
           forward(TILE_SIZE / 3, 0);
           weightcan.claw_open();
