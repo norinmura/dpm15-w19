@@ -19,9 +19,22 @@ public class ColorClassification implements Runnable {
    * number in the array is the R component value. The second number in the array is the G component
    * value. The third number in the array is the B component value.
    */
+
+  /**
+   * Mean RGB value for blue color after normalization
+   */
   public static final float[] MEAN_BLUE_HAT = {(float) 0.265, (float) 0.775, (float) 0.585};
+  /**
+   * Mean RGB value for green color after normalization
+   */
   public static final float[] MEAN_GREEN_HAT = {(float) 0.240, (float) 0.950, (float) 0.200};
+  /**
+   * Mean RGB value for yellow color after normalization
+   */
   public static final float[] MEAN_YELLOW_HAT = {(float) 0.830, (float) 0.525, (float) 0.125};
+  /**
+   * Mean RGB value for red color after normalization
+   */
   public static final float[] MEAN_RED_HAT = {(float) 0.960, (float) 0.100, (float) 0.060};
 
   /**
@@ -30,23 +43,63 @@ public class ColorClassification implements Runnable {
    * normalized values. The first number in the array is the R component value. The second number in
    * the array is the G component value. The third number in the array is the B component value.
    */
+
+  /**
+   * Standard deviation for blue color after normalization
+   */
   public static final float[] STD_BLUE_HAT = {(float) 0.030395, (float) 0.025519, (float) 0.036570};
+  /**
+   * Standard deviation for green color after normalization
+   */
   public static final float[] STD_GREEN_HAT =
       {(float) 0.034945, (float) 0.017382, (float) 0.042392};
+  /**
+   * Standard deviation for yellow color after normalization
+   */
   public static final float[] STD_YELLOW_HAT =
       {(float) 0.020065, (float) 0.024057, (float) 0.019677};
+  /**
+   * Standard deviation for red color after normalization
+   */
   public static final float[] STD_RED_HAT = {(float) 0.013000, (float) 0.030304, (float) 0.024357};
 
   /* FIELDS */
-  private SampleProvider usDistance; // The sample provider for the ultrasonic sensor
-  private float[] usData; // The data buffer for the ultrasonic sensor reading
-  private SampleProvider colorReading; // The sample provider for the color sensor
-  private float[] colorData; // The data buffer for the color sensor reading
-  int[] detected = new int[4]; // +1 if target color is detected
+  /**
+   * The sample provider for the ultrasonic sensor
+   */
+  private SampleProvider usDistance;
+  /**
+   * The data buffer for the ultrasonic sensor reading
+   */
+  private float[] usData;
+  /**
+   * The sample provider for the color sensor
+   */
+  private SampleProvider colorReading;
+  /**
+   * The data buffer for the color sensor reading
+   */
+  private float[] colorData;
+  /**
+   * Array with the number of samples detected for each color
+   */
+  int[] detected = new int[4];
+  /**
+   * Boolean to check if it finished the task
+   */
   boolean stop = false;
-  int color = -1; // initialize color to -1 (which is none of the colors)
-  boolean notfound = false; // false for this can is not the target can
-  boolean found = false; // true for target color found
+  /**
+   * Initialize color to -1 (which is none of the colors)
+   */
+  int color = -1;
+  /**
+   * Boolean variable that checks if the color found is not the target color
+   */
+  boolean notfound = false;
+  /**
+   * Boolean variable that checks if the color found is the target color
+   */
+  boolean found = false;
 
   /**
    * This is the default constructor. It takes:
@@ -68,7 +121,7 @@ public class ColorClassification implements Runnable {
    * This is the method that is called when the thread is called.
    */
   public void run() {
-    
+
     /* Initialize the thread variables */
     stop = false;
     color = -1;
@@ -76,7 +129,7 @@ public class ColorClassification implements Runnable {
     for (int i = 0; i < 4; i++) {
       detected[i] = 0;
     }
-    
+
     /* Detect the can color */
     while (true) {
       /**
@@ -150,10 +203,10 @@ public class ColorClassification implements Runnable {
         target_std = STD_RED_HAT;
         break;
     }
-    
+
     /* Obtain the color reading */
     float[] reading = mean_filter(); // Read value from filter
-    
+
     /* Compare the color */
     // If the reading value is within 3 standard deviations from the target mean for the 3
     // components, then return that color is identified.
@@ -201,7 +254,7 @@ public class ColorClassification implements Runnable {
       arr[i] = Arrays.copyOf(colorData, 3);
       temp[i] = Arrays.copyOf(arr[i], 3);
     }
-    
+
     /* Normalize readings */
     for (int i = 0; i < 5; i++) { // Normalize readings
       float norm = (float) Math

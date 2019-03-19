@@ -27,7 +27,7 @@ public class LightLocalizer implements Runnable {
   public static final double TILE_SIZE = 30.48; // The tile size used for demo
   public static final int FACING_CORNER = 225; // Angle facing the corner
   public static final int FULL_TURN = 360; // 360 degree for a circle
-  private static final double BACK_DIST = 8.8; // Travel back distance (distance between wheels and
+  private static final double BACK_DIST = 9.0; // Travel back distance (distance between wheels and
                                                // sensors)
 
   /* NON-PRIVATE FIELDS */

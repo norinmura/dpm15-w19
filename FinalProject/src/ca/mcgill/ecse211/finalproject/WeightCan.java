@@ -1,6 +1,5 @@
 package ca.mcgill.ecse211.finalproject;
 
-import lejos.hardware.Sound;
 import lejos.hardware.motor.UnregulatedMotor;
 
 /**
@@ -10,24 +9,52 @@ import lejos.hardware.motor.UnregulatedMotor;
  * @author Floria Peng
  */
 public class WeightCan implements Runnable {
-
+  
   /* Private Fields */
-  private UnregulatedMotor weightMotor; // use UnregulatedMotor to have access to the setPowerMethod
-                                        // for (Basic Motor)
-  private ColorClassification colorclassification; // used to call the method that gets the reading
-                                                   // from Ultrasonic Sensor
+  /**
+   * Field from UnregulatedMotor to have access to the setPowerMethod form Basic Motor
+   */
+  private UnregulatedMotor weightMotor; 
+  /**
+   * Field from ColorClassification used to call the method that gets the reading from Ultrasonic Sensor
+   */
+  private ColorClassification colorclassification; 
   /* Constants */
-  private static final int ANGLE = 80; // angle to lift TODO
-  private static final int MIN_POWER = 20; // The power to lift a light can but not the heavy can
-  private static final int MAX_POWER = 35; // The power needed to lift a heavy can
-  private static final int WAIT_TIME = 1000; // Time to wait before we request the ultrasonic sensor
-                                           // to say whether or not it still detects a can. TODO
-  private static final int NEAR_SENSOR = 5; // threshold value to check that determines whether or
-                                            // not the can is light
+  /**
+   * Angle to lift
+   */
+  private static final int ANGLE = 80; //TODO
+  /**
+   * The power to lift a light can but not the heavy can
+   */
+  private static final int MIN_POWER = 20; 
+  /**
+   * The power needed to lift a heavy can
+   */
+  private static final int MAX_POWER = 35; 
+  /**
+   * Time to wait before we request the ultrasonic sensor
+   */
+  private static final int WAIT_TIME = 1000; 
+  // to say whether or not it still detects a can. TODO
+  /**
+   * Threshold value read by ultrasonic sensor to check whether the can was lifted
+   */
+  private static final int NEAR_SENSOR = 5; 
+  /**
+   * Distance that determines out of bound
+   */
   private static final int OUT_OF_BOUND = 20000;
 
   /* Fields */
-  boolean heavy = false; // label whether or not the can is heavy
+  /**
+   * Initial tachoCount
+   */
+  int lastTachoCount = 0; 
+  /**
+   * Label whether or not the can is heavy
+   */
+  boolean heavy = false;  
 
   /**
    * This is the default constructor. It initializes:

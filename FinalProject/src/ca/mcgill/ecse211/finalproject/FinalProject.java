@@ -75,7 +75,7 @@ public class FinalProject {
 
   // Set these as appropriate for your team and current situation
   /* The IP address of the server */
-  private static final String SERVER_IP = "192.168.2.30";
+  private static final String SERVER_IP = "192.168.2.19";
   /* The team number of the user */
   private static final int TEAM_NUMBER = 15; // Team 15
 
@@ -86,9 +86,9 @@ public class FinalProject {
   // Motors
   // Instantiate motors; left right and sensor motor to rotate the color sensor.
   private static final EV3LargeRegulatedMotor leftMotor =
-      new EV3LargeRegulatedMotor(LocalEV3.get().getPort("B"));
-  private static final EV3LargeRegulatedMotor rightMotor =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
+  private static final EV3LargeRegulatedMotor rightMotor =
+      new EV3LargeRegulatedMotor(LocalEV3.get().getPort("B"));
   private static final EV3MediumRegulatedMotor sensorMotor =
       new EV3MediumRegulatedMotor(LocalEV3.get().getPort("C"));
   private static final UnregulatedMotor weightMotor =
@@ -121,7 +121,7 @@ public class FinalProject {
    */
   @SuppressWarnings({"resource", "rawtypes"})
   public static void main(String[] args) throws OdometerExceptions, InterruptedException {
-    
+
     /* Sensor related objects */
 
     // US Sensor (Obstacle Detection, Front)
@@ -295,9 +295,9 @@ public class FinalProject {
     Thread lightThread = new Thread(lightlocalizer);
     lightThread.start();
     lightThread.join();
-    
+
     Sound.beep();
-    
+
     /* Generating the search map */
     int[] upperRight = {sz_ur_x, sz_ur_y};
     int[] lowerLeft = {sz_ll_x, sz_ll_y};
@@ -340,12 +340,25 @@ public class FinalProject {
     // Traveling to island and iterating the map TODO
     int i = 0;
     if (redTeam == TEAM_NUMBER) {
-      navigation.travelTo(1 * TILE_SIZE, (tn_ll_y + tn_ur_y) * 0.5 * TILE_SIZE); // up
-      navigation.travelTo((tn_ll_x * TILE_SIZE) + TUNNEL_ADJ, (tn_ll_y + tn_ur_y) * 0.5 * TILE_SIZE); // right
+      navigation.travelTo(1 * TILE_SIZE, tn_ll_y * 0.5 * TILE_SIZE); // up
       navigation.correction = false;
-      navigation.runTo((tn_ur_x + 0.5) * TILE_SIZE, (tn_ll_y + tn_ur_y) * 0.5 * TILE_SIZE); // through tunnel no correction
+      
+      navigation.rotate(FULL_TURN / 4);
+      navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer
+      // reading
+      lightlocalizer.correctAngle(); // when a line is detected, correct angle
+      navigation.back(0, 9.0); // Go back the offset distance between the wheels and sensors
+      navigation.rotate(-FULL_TURN / 4);
+      
       navigation.correction = true;
-      navigation.travelTo((tn_ur_x + 0.5) * TILE_SIZE, fullPath[i][0] * TILE_SIZE); // down
+      navigation.travelTo(1 * TILE_SIZE, (tn_ll_y + tn_ur_y) * 0.5 * TILE_SIZE); // up
+      navigation.travelTo((tn_ll_x * TILE_SIZE) + TUNNEL_ADJ,
+          (tn_ll_y + tn_ur_y) * 0.5 * TILE_SIZE); // right
+      navigation.correction = false;
+      // Run without correction
+      navigation.runTo((tn_ur_x + 0.5) * TILE_SIZE, (tn_ll_y + tn_ur_y) * 0.5 * TILE_SIZE);
+      navigation.correction = true;
+      navigation.travelTo((tn_ur_x + 0.5) * TILE_SIZE, fullPath[i][1] * TILE_SIZE); // down
       navigation.travelTo(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE); // right
       Sound.beep();
       Sound.twoBeeps();
