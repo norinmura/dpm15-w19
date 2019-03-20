@@ -11,6 +11,7 @@ import lejos.robotics.SampleProvider;
  * @author Floria Peng
  */
 public class ColorClassification implements Runnable {
+
   /* STATIC FIELDS */
   /**
    * The normalized mean value for each color. The values were found after taking 100 sample point
@@ -270,4 +271,5 @@ public class ColorClassification implements Runnable {
     }
     return RGB; // return average value
   }
+
 }

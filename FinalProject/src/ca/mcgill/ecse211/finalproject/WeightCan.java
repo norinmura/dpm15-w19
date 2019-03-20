@@ -9,6 +9,7 @@ import lejos.hardware.motor.UnregulatedMotor;
  * @author Floria Peng
  */
 public class WeightCan implements Runnable {
+  
   /* Private Fields */
   /**
    * Field from UnregulatedMotor to have access to the setPowerMethod form Basic Motor
@@ -22,7 +23,7 @@ public class WeightCan implements Runnable {
   /**
    * Angle to lift
    */
-  private static final int ANGLE = 80; //TODO
+  private static final int ANGLE = 80;
   /**
    * The power to lift a light can but not the heavy can
    */
@@ -35,7 +36,7 @@ public class WeightCan implements Runnable {
    * Time to wait before we request the ultrasonic sensor
    */
   private static final int WAIT_TIME = 1000; 
-  // to say whether or not it still detects a can. TODO
+  // to say whether or not it still detects a can.
   /**
    * Threshold value read by ultrasonic sensor to check whether the can was lifted
    */
@@ -55,17 +56,16 @@ public class WeightCan implements Runnable {
    */
   boolean heavy = false;  
 
-
-	/**
-	 * This is the default constructor. It initializes:
-	 * 
-	 * @param weightMotor and
-	 * @param colorclassification
-	 */
-	public WeightCan(UnregulatedMotor weightMotor, ColorClassification colorclassification) {
-		this.weightMotor = weightMotor;
-		this.colorclassification = colorclassification;
-	}
+  /**
+   * This is the default constructor. It initializes:
+   * 
+   * @param weightMotor and
+   * @param colorclassification
+   */
+  public WeightCan(UnregulatedMotor weightMotor, ColorClassification colorclassification) {
+    this.weightMotor = weightMotor;
+    this.colorclassification = colorclassification;
+  }
 
   /**
    * This method tries to lift a can to ANGLE degree. If the can is light, once the lifting is
@@ -139,4 +139,5 @@ public class WeightCan implements Runnable {
     weightMotor.stop();
     weightMotor.resetTachoCount();
   }
+
 }

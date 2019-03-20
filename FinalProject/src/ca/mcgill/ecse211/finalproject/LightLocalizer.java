@@ -16,106 +16,41 @@ public class LightLocalizer implements Runnable {
 
   /* PRIVATE FIELDS */
 
-  /**
-   * odometer instance
-   */
-  private Odometer odometer;
-  /**
-   * The left Motor of the robot
-   */
-  private EV3LargeRegulatedMotor leftMotor;
-  /**
-   * The right motor of the robot
-   */
-  private EV3LargeRegulatedMotor rightMotor;
+  private Odometer odometer; // The odometer instance
+  private EV3LargeRegulatedMotor leftMotor; // The left motor of the robot
+  private EV3LargeRegulatedMotor rightMotor; // The right motor of the robot
 
-  /**
-   * The instance of line correction
-   */
-  private LineCorrection linecorrection;
-  /**
-   * The instance of sensor rotation
-   */
-  private Navigation navigation;
+  private LineCorrection linecorrection; // The instance of line correction
+  private Navigation navigation; // The instance of sensor rotation
 
   /* CONSTANTS */
-  /**
-   * The tile size used for demo
-   */
-  public static final double TILE_SIZE = 30.48;
-  /**
-   * Angle facing the corner
-   */
-  public static final int FACING_CORNER = 225;
-  /**
-   * 360 degree for a circle
-   */
-  public static final int FULL_TURN = 360;
-  /**
-   * Travel back distance (distance between wheels and sensors)
-   */
-  private static final double BACK_DIST = 9.0; // 
+  public static final double TILE_SIZE = 30.48; // The tile size used for demo
+  public static final int FACING_CORNER = 225; // Angle facing the corner
+  public static final int FULL_TURN = 360; // 360 degree for a circle
+  private static final double BACK_DIST = 9.0; // Travel back distance (distance between wheels and
+                                               // sensors)
 
   /* NON-PRIVATE FIELDS */
-  /**
-   * The left wheel radius of the robot
-   */
-  double leftRadius;
-  /**
-   * The right wheel radius of the robot
-   */
-  double rightRadius;
-  /**
-   * The track of the robot (by measuring the distance between the center of both wheel)
-   */
-  double track;
-  /**
-   * The corner that the robot starts
-   */
-  int corner;
-  /**
-   * Initialize the last variable to a specific number
-   */
-  double last = Math.PI;
-  /**
-   * last and current are both used for differential filter
-   */
-  double current = 0;
-  /**
-   * The x and y tile line detect angle, clockwise
-   */
-  double[] detect1 = new double[4];
-  /**
-   * The x and y tile line detect angle, clockwise
-   */
-  double[] detect2 = new double[4];
-  /**
-   * The time of the light sensor
-   */
-  long[] time = new long[2];
-  /**
-   * The detection of the line of the two light sensors
-   */
-  boolean[] line = {false, false};
-  /**
-   * The localization error in the x direction
-   */
-  double xerror = 0;
-  /**
-   * The localization error in the y direction
-   */
-  double yerror = 0;
-  /**
-   * The localization error in angle
-   */
-  double terror = 0;
-  /**
-   * The localization error in angle
-   */
-  double before = 0;
+  double leftRadius; // The left wheel radius of the robot
+  double rightRadius; // The right wheel radius of the robot
+  double track; // The track of the robot (by measuring the distance between the center of both
+                // wheel)
+  int corner; // The corner that the robot starts
+  
+  double last = Math.PI; // Initialize the last variable to a specific number
+  double current = 0; // last and current are both used for differential filter
+  double[] detect1 = new double[4]; // The x and y tile line detect angle, clockwise
+  double[] detect2 = new double[4]; // The x and y tile line detect angle, clockwise
+  long[] time = new long[2]; // The time of the light sensor
+  boolean[] line = {false, false}; // The detection of the line of the two light sensors
+  double xerror = 0; // The localization error in the x direction
+  double yerror = 0; // The localization error in the y direction
+  double terror = 0; // The localization error in angle
+  double before = 0; // The before line correction angle
 
   /**
    * The default constructor of this class
+   * 
    * @param odometer
    * @param leftMotor
    * @param rightMotor
@@ -194,7 +129,7 @@ public class LightLocalizer implements Runnable {
   }
 
   /**
-   * This helper method is used to correct the Angle when the light sensor detects the line. 
+   * This helper method is used to correct the Angle
    */
   void correctAngle() {
     while (true) {
