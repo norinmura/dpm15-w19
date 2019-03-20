@@ -23,7 +23,7 @@ public class Navigation {
   /**
    * The run speed for the robot to travel through the tunnel
    */
-  public static final int RUN_SPEED = 220; // The run speed for the robot
+  public static final int RUN_SPEED = 170; // The run speed for the robot
   /**
    * The rotating speed of the robot
    */

@@ -154,7 +154,11 @@ public class FinalProject {
   /**
    * The tunnel adjustment
    */
-  public static final double TUNNEL_ADJ = 2; // More distance when traveling through the tunnel TODO
+  public static final double TUNNEL_ADJ = 2; // More distance when traveling through the tunnel
+  /**
+   * Time to display
+   */
+  private static final long TIME_OUT = 270000; // 270000
 
   /**
    * The main method for the Final Project. This class will start the threads used for the program.
@@ -198,6 +202,8 @@ public class FinalProject {
 
     // Initialize WifiConnection class
     WifiConnection conn = new WifiConnection(SERVER_IP, TEAM_NUMBER, ENABLE_DEBUG_WIFI_PRINT);
+    
+    long timeStart = System.currentTimeMillis();
 
     // Initializing the parameters
     int redTeam, greenTeam, corner, ll_x, ll_y, ur_x, ur_y, tn_ll_x, tn_ll_y, tn_ur_x, tn_ur_y,
@@ -331,14 +337,14 @@ public class FinalProject {
     odoDisplayThread.start();
 
     // Start the thread for us localizer
-    /*Thread usThread = new Thread(uslocalizer);
+    Thread usThread = new Thread(uslocalizer);
     usThread.start();
     usThread.join();
 
     // Start the thread for light localizer
     Thread lightThread = new Thread(lightlocalizer);
     lightThread.start();
-    lightThread.join();*/
+    lightThread.join();
 
     Sound.beep();
 
@@ -379,14 +385,10 @@ public class FinalProject {
         fullPath[i][2] = 4;
       }
     }
-    
-    for (int i = 0; i < fullPath.length; i++) {
-      System.out.println("x: " + fullPath[i][0] + "=====" + "y: " + fullPath[i][1] + "=====" + fullPath[i][2]);
-    }
 
     /* Traverse the search map and navigate */
     // Traveling to island and iterating the map TODO
-    /*int i = 0;
+    int i = 0;
     if (redTeam == TEAM_NUMBER) {
       navigation.travelTo(1 * TILE_SIZE, tn_ll_y * TILE_SIZE); // up
       try {
@@ -432,7 +434,7 @@ public class FinalProject {
       lightlocalizer.correctAngle(); // when a line is detected, correct angle
       navigation.back(0, 9.0); // Go back the offset distance between the wheels and sensors
       odometer.position[2] = Math.toRadians(FULL_TURN / 2);
-      odometer.setXYT((tn_ur_x + 1) * TILE_SIZE, (tn_ll_y - 1) * TILE_SIZE, FULL_TURN / 2);
+      odometer.setXYT((tn_ur_x + 1) * TILE_SIZE, tn_ll_y * TILE_SIZE, FULL_TURN / 2);
       try {
         Thread.sleep(50);
       } catch (Exception e) {
@@ -456,8 +458,7 @@ public class FinalProject {
       i++;
 
       // Start searching the search zone
-      while (i < fullPath.length) {
-        System.out.println("want to move here: x: " + fullPath[i][0] + ", y: " + fullPath[i][1]);
+      while (i < fullPath.length && (System.currentTimeMillis() - timeStart) < TIME_OUT) {
         navigation.moveTo(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE);
         if (fullPath[i][2] == 4) { // straight line point
           if (odometer.getXYT()[2] < 180) {
@@ -473,10 +474,43 @@ public class FinalProject {
         } else if (fullPath[i][2] == 3) {
           navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE,
               FULL_TURN / 4);
+        } else if (fullPath[i][2] == 0) { // right localize
+          navigation.correction = false;
+          navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
+          lightlocalizer.correctAngle(); // when a line is detected, correct angle
+          navigation.back(0, 9.0); // Go back the offset distance between the wheels and sensors
+          navigation.rotate(-FULL_TURN / 4);
+          navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
+          lightlocalizer.correctAngle(); // when a line is detected, correct angle
+          navigation.back(0, 9.0); // Go back the offset distance between the wheels and sensors
+          odometer.position[2] = Math.toRadians(0);
+          odometer.setXYT(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE, 0);
+          try {
+            Thread.sleep(50);
+          } catch (Exception e) {
+          }
+          navigation.correction = true;
+        } else if (fullPath[i][2] == 2) { // left localize
+          navigation.correction = false;
+          navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
+          lightlocalizer.correctAngle(); // when a line is detected, correct angle
+          navigation.back(0, 9.0); // Go back the offset distance between the wheels and sensors
+          navigation.rotate(FULL_TURN / 4);
+          navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
+          lightlocalizer.correctAngle(); // when a line is detected, correct angle
+          navigation.back(0, 9.0); // Go back the offset distance between the wheels and sensors
+          odometer.position[2] = Math.toRadians(0);
+          odometer.setXYT(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE, 0);
+          try {
+            Thread.sleep(50);
+          } catch (Exception e) {
+          }
+          navigation.correction = true;
         }
         i++;
       }
 
+      Sound.beepSequence();
       // After searching return to the upper right corner
       navigation.runTo(sz_ur_x * TILE_SIZE, sz_ur_y * TILE_SIZE);
       for (int j = 0; j < 5; j++) { // Beeps when it arrives
@@ -486,7 +520,7 @@ public class FinalProject {
         } catch (Exception e) {
         }
       }
-    }*/
+    }
 
     /* Waiting for exit */
     // Wait here forever until button pressed to terminate the robot
