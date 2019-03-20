@@ -517,6 +517,7 @@ public class Navigation {
 
     leftMotor.setSpeed(FORWARD_SPEED + 40);
     rightMotor.setSpeed(FORWARD_SPEED + 40);
+
     leftMotor.rotate(convertDistance(leftRadius, distance), true);
     rightMotor.rotate(convertDistance(rightRadius, distance), true);
 

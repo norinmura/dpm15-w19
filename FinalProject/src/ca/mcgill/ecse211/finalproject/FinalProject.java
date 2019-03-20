@@ -78,7 +78,9 @@ public class FinalProject {
   /**
    * The IP address of the server
    */
+
   private static final String SERVER_IP = "192.168.2.3";
+
   /**
    * The team number of the user
    */
@@ -395,11 +397,13 @@ public class FinalProject {
         Thread.sleep(50);
       } catch (Exception e) {
       }
+
       if (tn_ll_x == 2) {
         navigation.rotate(FULL_TURN / 4);
       } else {
         navigation.travelTo((tn_ll_x - 1) * TILE_SIZE, tn_ll_y * TILE_SIZE); // right
       }
+
       try {
         Thread.sleep(50);
       } catch (Exception e) {
@@ -513,10 +517,12 @@ public class FinalProject {
         }
         i++;
       }
+
       Sound.beepSequence();
       
       // After searching return to the upper right corner
       navigation.runTo(sz_ur_x * TILE_SIZE, sz_ur_y * TILE_SIZE);
+
       for (int j = 0; j < 5; j++) { // Beeps when it arrives
         Sound.beep();
         try {
