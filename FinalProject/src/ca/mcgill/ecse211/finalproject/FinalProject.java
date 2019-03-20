@@ -78,7 +78,7 @@ public class FinalProject {
   /**
    * The IP address of the server
    */
-  private static final String SERVER_IP = "192.168.2.19";
+  private static final String SERVER_IP = "192.168.2.33";
   /**
    * The team number of the user
    */
@@ -512,7 +512,7 @@ public class FinalProject {
 
       Sound.beepSequence();
       // After searching return to the upper right corner
-      navigation.runTo(sz_ur_x * TILE_SIZE, sz_ur_y * TILE_SIZE);
+      navigation.travelTo(sz_ur_x * TILE_SIZE, sz_ur_y * TILE_SIZE);
       for (int j = 0; j < 5; j++) { // Beeps when it arrives
         Sound.beep();
         try {

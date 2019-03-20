@@ -649,6 +649,8 @@ public class Navigation {
           back(TILE_SIZE / 3, 0);
           rotate(FULL_TURN / 2);
           roundSearch(x, y, end_angle - odometer.getXYT()[2]);
+        } else {
+          roundSearch(x, y, end_angle - odometer.getXYT()[2]);
         }
       }
     }
