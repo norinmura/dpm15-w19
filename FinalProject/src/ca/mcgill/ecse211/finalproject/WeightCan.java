@@ -9,7 +9,6 @@ import lejos.hardware.motor.UnregulatedMotor;
  * @author Floria Peng
  */
 public class WeightCan implements Runnable {
-  
   /* Private Fields */
   /**
    * Field from UnregulatedMotor to have access to the setPowerMethod form Basic Motor
@@ -56,16 +55,17 @@ public class WeightCan implements Runnable {
    */
   boolean heavy = false;  
 
-  /**
-   * This is the default constructor. It initializes:
-   * 
-   * @param weightMotor and
-   * @param colorclassification
-   */
-  public WeightCan(UnregulatedMotor weightMotor, ColorClassification colorclassification) {
-    this.weightMotor = weightMotor;
-    this.colorclassification = colorclassification;
-  }
+
+	/**
+	 * This is the default constructor. It initializes:
+	 * 
+	 * @param weightMotor and
+	 * @param colorclassification
+	 */
+	public WeightCan(UnregulatedMotor weightMotor, ColorClassification colorclassification) {
+		this.weightMotor = weightMotor;
+		this.colorclassification = colorclassification;
+	}
 
   /**
    * This method tries to lift a can to ANGLE degree. If the can is light, once the lifting is
@@ -139,5 +139,4 @@ public class WeightCan implements Runnable {
     weightMotor.stop();
     weightMotor.resetTachoCount();
   }
-
 }
