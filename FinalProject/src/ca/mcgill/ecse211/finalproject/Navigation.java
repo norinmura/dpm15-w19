@@ -61,6 +61,8 @@ public class Navigation {
   double end_angle = 0; // The angle left for rotate search
   int first_come = 0;
   double round_detect = 0;
+  int delay = 20; // The after line correction, before next correction delay
+  boolean correction = true; // true for 
 
   /**
    * The constructor for the Navigation class
@@ -171,11 +173,11 @@ public class Navigation {
 
     turnTo(angle); // Call the turnTo method
 
-    leftMotor.setSpeed(FORWARD_SPEED);
     rightMotor.setSpeed(FORWARD_SPEED);
+    leftMotor.setSpeed(FORWARD_SPEED);
     // Travel the robot to the destination point
-    leftMotor.rotate(convertDistance(leftRadius, travel), true);
-    rightMotor.rotate(convertDistance(rightRadius, travel), false);
+    rightMotor.rotate(convertDistance(leftRadius, travel), true);
+    leftMotor.rotate(convertDistance(rightRadius, travel), false);
 
   }
 
@@ -205,14 +207,14 @@ public class Navigation {
     travel = Math.sqrt(Math.pow(x - lastx, 2) + Math.pow(y - lasty, 2)); // The travel distance
     angle = Math.atan2(x - lastx, y - lasty) * 180 / Math.PI; // The angle that the robot should
                                                               // rotate to
-
+    
     turnTo(angle); // Call the turnTo method
 
-    leftMotor.setSpeed(FORWARD_SPEED);
     rightMotor.setSpeed(FORWARD_SPEED);
+    leftMotor.setSpeed(FORWARD_SPEED);
     // Travel the robot to the destination point
-    leftMotor.rotate(convertDistance(leftRadius, travel), true);
-    rightMotor.rotate(convertDistance(rightRadius, travel), true);
+    rightMotor.rotate(convertDistance(leftRadius, travel), true);
+    leftMotor.rotate(convertDistance(rightRadius, travel), true);
 
     // TODO error, only correct once
     while (leftMotor.isMoving() || rightMotor.isMoving()) {
@@ -324,6 +326,9 @@ public class Navigation {
    * @param position - The type of the map point (pre-defined in the SearchCan class)
    */
   void correctAngle(double x, double y, int method) {
+    if (!correction) {
+      return;
+    }
     /* INITIALIZE VARIABLES */
     boolean key = true;
     first_come = 0;
@@ -331,6 +336,14 @@ public class Navigation {
       if (Math.sqrt(Math.pow((odometer.getXYT()[0] - x), 2)
           + Math.pow((odometer.getXYT()[1] - y), 2)) < TILE_SIZE / 2) {
         break;
+      }
+      while (delay < 20) {
+        delay++;
+        System.out.println("delay is " + delay);
+        try {
+          Thread.sleep(50);
+        } catch (Exception e) {
+        }
       }
       line[0] = linecorrection.filter1();
       line[1] = linecorrection.filter2();
@@ -366,10 +379,10 @@ public class Navigation {
           odometer.position[2] = Math.toRadians(270);
         }
         if (method == 1) {
-          forward(1, 1);
+          delay = 0;
           moveTo(x, y);
         } else if (method == 2) {
-          forward(1, 1);
+          delay = 0;
           travelTo(x, y);
         }
       }
@@ -384,8 +397,8 @@ public class Navigation {
    */
   void move(double distance) {
 
-    leftMotor.setSpeed(FORWARD_SPEED);
-    rightMotor.setSpeed(FORWARD_SPEED);
+    leftMotor.setSpeed(FORWARD_SPEED + 20);
+    rightMotor.setSpeed(FORWARD_SPEED + 20);
     leftMotor.rotate(convertDistance(leftRadius, distance), true);
     rightMotor.rotate(convertDistance(rightRadius, distance), true);
 
@@ -410,29 +423,6 @@ public class Navigation {
     leftMotor.rotate(convertDistance(leftRadius, distance), true);
     rightMotor.rotate(convertDistance(rightRadius, distance), false);
 
-  }
-
-  /**
-   * <p>
-   * This method is the forward method of the robot. The forward distance is calculated by the x and
-   * y parameter passed to this method (Euclidean distance).
-   * 
-   * <p>
-   * This method cannot be break
-   * 
-   * @param x - The x distance the robot should move
-   * @param y - The y distance the robot should move
-   */
-  void forward(double x, double y, int first_come) {
-    if (first_come == 1) {
-      forward(x, y);
-    } else {
-      distance = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)); // The travel distance
-      rightMotor.setSpeed(FORWARD_SPEED);
-      leftMotor.setSpeed(FORWARD_SPEED);
-      rightMotor.rotate(convertDistance(leftRadius, distance), true);
-      leftMotor.rotate(convertDistance(rightRadius, distance), false);
-    }
   }
 
   /**
@@ -589,8 +579,8 @@ public class Navigation {
    */
   void turn(double theta) {
 
-    leftMotor.setSpeed(ROTATE_SPEED - 20);
-    rightMotor.setSpeed(ROTATE_SPEED - 20);
+    leftMotor.setSpeed(ROTATE_SPEED + 20);
+    rightMotor.setSpeed(ROTATE_SPEED + 20);
 
     leftMotor.rotate(convertAngle(leftRadius, track, theta), true);
     rightMotor.rotate(-convertAngle(rightRadius, track, theta), true); // The true is to ensure the

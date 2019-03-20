@@ -3,6 +3,7 @@ package ca.mcgill.ecse211.finalproject;
 import java.util.Arrays;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
+import lejos.hardware.Sound;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.robotics.SampleProvider;
 
@@ -86,11 +87,29 @@ public class UltrasonicLocalizer implements Runnable {
    * @see java.lang.Runnable#run()
    */
   public void run() {
-    if (filter() > INFINITY_DISTANCE) { // Falling edge
+    /*if (filter() > INFINITY_DISTANCE) { // Falling edge
       fallingEdge(); // Call the fallingEdge method
     } else { // Rising edge
       risingEdge(); // Call the risingEdge method
+    }*/
+    navigation.turn(FULL_TURN); // The robot will rotate clockwise for a full turn until disrupted
+    while (rightMotor.isMoving() || leftMotor.isMoving()) {
+      if (filter() > INFINITY_DISTANCE) { // If the robot is not facing the wall
+        leftMotor.setAcceleration(ACCELERATION);
+        rightMotor.setAcceleration(ACCELERATION);
+        leftMotor.stop(true); // Stop the motors
+        rightMotor.stop(false);
+        Sound.beepSequenceUp();
+        break;
+      }
+      try {
+        Thread.sleep(50);
+      } catch (Exception e) {
+      }
     }
+    odometer.position[2] = 0; // Reset the angle of the odometer
+    odometer.setTheta(0); // Reset the angle of the odometerData
+    fallingEdge(); // Call the fallingEdge method
     navigation.turnTo(-error); // Correct the angle of the robot
     odometer.position[2] = 0; // Reset the angle of the odometer
     odometer.setTheta(0); // Reset the angle of the odometerData

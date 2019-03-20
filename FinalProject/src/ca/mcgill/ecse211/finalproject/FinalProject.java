@@ -2,7 +2,6 @@ package ca.mcgill.ecse211.finalproject;
 
 import ca.mcgill.ecse211.odometer.*;
 import ca.mcgill.ecse211.WiFiClient.WifiConnection;
-import java.util.Arrays;
 import java.util.Map;
 import lejos.hardware.Button;
 import lejos.hardware.Sound;
@@ -18,22 +17,70 @@ import lejos.hardware.sensor.SensorModes;
 import lejos.robotics.SampleProvider;
 
 /**
- * This is the main class of the program for the Final Project. Starting in a known corner, localize
- * to the grid, and perform a search in the prescribed area for a can of specified color. It will
- * then detect the can and identify its color. The prescribed area is given to us by a lower left
- * corner and an upper right corner.
+ * <p>
+ * This is the main class of the program for the Final Project (beta demo version). It contains the
+ * 4 motor/output ports (two large regulated motor, one medium regulated motor and one large
+ * unregulated motor), and 4 sensor/input ports (three color sensor, one ultrasonic sensor). And in
+ * the constant field, the user should change, before running the program, first, the SERVER_IP
+ * according to the IP address of his/her own computer; second, the TEAM_NUMBER to the user team
+ * number. The static constant field of this class also contains the parameters of the robot (wheel
+ * radius and track width).
+ * 
+ * <p>
+ * For this version, the robot will start at a known corner 0 (the lower left corner of the board,
+ * (0, 0) coordinate). The Wi-Fi connection that connects the robot with the server using Wi-Fi,
+ * will obtain data from the server. The Wi-Fi connection is implemented by importing and building
+ * path to a helper class. Using the if/else statement, the robot will only store the useful data
+ * and exit the program if there is error in the server input or Wi-Fi connection. After obtaining
+ * all the essential parameters, it will start to initialize all the sensors (two color sensor to
+ * RED mode, one color sensor to RGB mode and the ultrasonic sensor to distance mode), and create
+ * the instances for the program (odometer, display, weight can, line correction, navigation,
+ * ultrasoinc localizer and light localizer). The x, y, theta coordinate of the robot is: x -
+ * horizontal axis, y - vertical axis, theta - clockwise angle, (0, 0, 0) as the lower left corner
+ * of the board and facing towards positive y. The Odometer class keep track of the position (x, y,
+ * and theta) of the robot, with x, y and theta initialized according to the result of the
+ * localization and the starting corner. The Display class will display the x, y and theta value on
+ * the LCD screen of the robot. The ColorClassification class will detect the color of the can
+ * (fetching R, G, B sample using the RGB mode) and identify the color (comparing the reading with
+ * the standardized default value of each color, i.e., blue, green, yellow and red); the color
+ * sensor carried by the arm (rotates 180 degrees), so the color sensor will keep detecting the
+ * color while the arm is moving, and finally return the color that is detected most. The WeightCan
+ * class contains the control of the claw of the robot, including the lifting and dropping can, and
+ * weight detection. The LineCorrection class contains two differential filter method for the two
+ * color sensor in RED mode for line detection. The Navigation class contains the control of the
+ * motion of the robot (turning, traveling and angle correction), it will also call
+ * ColorClassification and WeightCan class and run them in threads. The UltrasonicLocalizer class is
+ * able to localize the orientation (angle) of the robot and the LightLocalizer class will localize
+ * the localization and the orientation (angle) of the robot, and reset the coordinates according to
+ * the starting corner.
+ * 
+ * <p>
+ * After initialing all the instances, the main method will start the thread for odometer, display,
+ * and ultrasonic localizer at the same time. After the termination of the ultrasonic localizer, the
+ * light localizer thread will be created and start. Finally, after the termination of the light
+ * localization, the robot will beep to indicate the user that the robot is well localized and ready
+ * to run.
+ * 
+ * <p>
+ * After localizing to the grid, the main method will generate a S-shape search map, then navigate
+ * the robot to travel through the tunnel, arrive at the lower left corner of the search region, and
+ * perform a search in the prescribed area for a can of specified color (search path is following
+ * the generated map). The robot will arrive at each map point, turn to find the cans around it, go
+ * approach the can, detect the can and identify its color, and beeps if the target color is found.
+ * Before termination, the robot will be navigated to the upper right corner of the search region.
  * 
  * @author Floria Peng
  */
 public class FinalProject {
 
-  /* STATIC FIELDS */
-
-  // ** Set these as appropriate for your team and current situation **
-  private static final String SERVER_IP = "192.168.2.22";
+  // Set these as appropriate for your team and current situation
+  /* The IP address of the server */
+  private static final String SERVER_IP = "192.168.2.19";
+  /* The team number of the user */
   private static final int TEAM_NUMBER = 15; // Team 15
 
   // Enable/disable printing of debug info from the WiFi class
+  /* Control the printing */
   private static final boolean ENABLE_DEBUG_WIFI_PRINT = true;
 
   // Motors
@@ -58,7 +105,7 @@ public class FinalProject {
 
   /* CONSTANTS */
   public static final double WHEEL_RAD = 2.1; // The radius of the wheel
-  public static final double TRACK = 11.93; // The width of the robot measured
+  public static final double TRACK = 13.15; // The width of the robot measured
   public static final int FULL_TURN = 360; // 360 degree for a circle
   public static final double TILE_SIZE = 30.48; // The tile size used for demo
   public static final double TUNNEL_ADJ = 10; // More distance when traveling through the tunnel
@@ -74,6 +121,30 @@ public class FinalProject {
    */
   @SuppressWarnings({"resource", "rawtypes"})
   public static void main(String[] args) throws OdometerExceptions, InterruptedException {
+
+    /* Sensor related objects */
+
+    // US Sensor (Obstacle Detection, Front)
+    SensorModes usSensor = new EV3UltrasonicSensor(usPort); // Create usSensor instance
+    SampleProvider usDistance = usSensor.getMode("Distance"); // usDistance provides samples from
+                                                              // the instance
+    float[] usData = new float[usDistance.sampleSize()]; // usData is the buffer where data is
+                                                         // stored
+
+    // Color Sensor (Line Detection, Left)
+    SensorModes myColor1 = new EV3ColorSensor(portColor1); // Get sensor instance
+    SampleProvider myColorStatus1 = myColor1.getMode("Red"); // Get sample provider as "RGB"
+    float[] sampleColor1 = new float[myColorStatus1.sampleSize()]; // Create a data buffer
+
+    // Color Sensor (Line Detection, Right)
+    SensorModes myColor2 = new EV3ColorSensor(portColor2); // Get sensor instance
+    SampleProvider myColorStatus2 = myColor2.getMode("Red"); // Get sample provider as "RGB"
+    float[] sampleColor2 = new float[myColorStatus2.sampleSize()]; // Create a data buffer
+
+    // Color Sensor (Color Classification, Front)
+    SensorModes colorSensor = new EV3ColorSensor(colorPort); // Get sensor instance
+    SampleProvider colorReading = colorSensor.getMode("RGB"); // Get sample provider as "RGB"
+    float[] colorData = new float[colorReading.sampleSize()]; // Create a data buffer
 
     System.out.println("Running..");
 
@@ -174,31 +245,6 @@ public class FinalProject {
       System.err.println("Error: " + e.getMessage());
     }
 
-    /* Sensor related objects */
-
-    // US Sensor (Obstacle Detection, Front)
-    SensorModes usSensor = new EV3UltrasonicSensor(usPort); // Create usSensor instance
-    SampleProvider usDistance = usSensor.getMode("Distance"); // usDistance provides samples from
-                                                              // the instance
-    float[] usData = new float[usDistance.sampleSize()]; // usData is the buffer where data is
-                                                         // stored
-
-    // Color Sensor (Line Detection, Left)
-    SensorModes myColor1 = new EV3ColorSensor(portColor1); // Get sensor instance
-    SampleProvider myColorStatus1 = myColor1.getMode("Red"); // Get sample provider as "RGB"
-    float[] sampleColor1 = new float[myColorStatus1.sampleSize()]; // Create a data buffer
-
-    // Color Sensor (Line Detection, Right)
-    SensorModes myColor2 = new EV3ColorSensor(portColor2); // Get sensor instance
-    SampleProvider myColorStatus2 = myColor2.getMode("Red"); // Get sample provider as "RGB"
-    float[] sampleColor2 = new float[myColorStatus2.sampleSize()]; // Create a data buffer
-
-    // Color Sensor (Color Classification, Front)
-    SensorModes colorSensor = new EV3ColorSensor(colorPort); // Get sensor instance
-    SampleProvider colorReading = colorSensor.getMode("RGB"); // Get sample provider as "RGB"
-    float[] colorData = new float[colorReading.sampleSize()]; // Create a data buffer
-
-
     /* Obtaining Instances */
 
     // instance of Odometer
@@ -240,7 +286,7 @@ public class FinalProject {
     Thread odoDisplayThread = new Thread(odometryDisplay);
     odoDisplayThread.start();
 
-/*    // Start the thread for us localizer
+    // Start the thread for us localizer
     Thread usThread = new Thread(uslocalizer);
     usThread.start();
     usThread.join();
@@ -249,14 +295,11 @@ public class FinalProject {
     Thread lightThread = new Thread(lightlocalizer);
     lightThread.start();
     lightThread.join();
-*/
+
     Sound.beep();
-    
-    navigation.roundSearch(0, 0, -180);
-    Sound.beepSequence();
 
     /* Generating the search map */
-/*    int[] upperRight = {sz_ur_x, sz_ur_y};
+    int[] upperRight = {sz_ur_x, sz_ur_y};
     int[] lowerLeft = {sz_ll_x, sz_ll_y};
     int horizontal = upperRight[0] - lowerLeft[0] + 1; // The x nodes that will be traveled
     int vertical = upperRight[1] - lowerLeft[1] + 1; // The y nodes that will be traveled
@@ -292,20 +335,35 @@ public class FinalProject {
         fullPath[i][2] = 4;
       }
     }
-*/
+
     /* Traverse the search map and navigate */
     // Traveling to island and iterating the map TODO
-/*    int i = 0;
+    int i = 0;
     if (redTeam == TEAM_NUMBER) {
-      navigation.travelTo(1 * TILE_SIZE, (tn_ll_y + tn_ur_y) * 0.5 * TILE_SIZE);
-      navigation.travelTo((tn_ll_x * TILE_SIZE) + TUNNEL_ADJ, (tn_ll_y + tn_ur_y) * 0.5 * TILE_SIZE);
+      navigation.travelTo(1 * TILE_SIZE, tn_ll_y * 0.5 * TILE_SIZE); // up
+      navigation.correction = false;
+      
+      navigation.rotate(FULL_TURN / 4);
+      navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer
+      // reading
+      lightlocalizer.correctAngle(); // when a line is detected, correct angle
+      navigation.back(0, 9.0); // Go back the offset distance between the wheels and sensors
+      navigation.rotate(-FULL_TURN / 4);
+      
+      navigation.correction = true;
+      navigation.travelTo(1 * TILE_SIZE, (tn_ll_y + tn_ur_y) * 0.5 * TILE_SIZE); // up
+      navigation.travelTo((tn_ll_x * TILE_SIZE) + TUNNEL_ADJ,
+          (tn_ll_y + tn_ur_y) * 0.5 * TILE_SIZE); // right
+      navigation.correction = false;
+      // Run without correction
       navigation.runTo((tn_ur_x + 0.5) * TILE_SIZE, (tn_ll_y + tn_ur_y) * 0.5 * TILE_SIZE);
-      navigation.travelTo((tn_ur_x + 0.5) * TILE_SIZE, fullPath[i][0] * TILE_SIZE);
-      navigation.travelTo(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE);
+      navigation.correction = true;
+      navigation.travelTo((tn_ur_x + 0.5) * TILE_SIZE, fullPath[i][1] * TILE_SIZE); // down
+      navigation.travelTo(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE); // right
       Sound.beep();
       Sound.twoBeeps();
       Sound.twoBeeps();
-      navigation.turnTo(FULL_TURN / 4);
+      /*navigation.turnTo(FULL_TURN / 4); // facing right
       navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE, -FULL_TURN / 4);
       i++;
       while (i < fullPath.length) {
@@ -321,9 +379,10 @@ public class FinalProject {
         } else if (fullPath[i][2] == 3) {
           navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE, FULL_TURN / 4);
         }
-      }
+      }*/
+      navigation.runTo(sz_ur_x * TILE_SIZE, sz_ur_y * TILE_SIZE);
     }
-*/
+
     /* Waiting for exit */
     // Wait here forever until button pressed to terminate the robot
     Button.waitForAnyPress();
