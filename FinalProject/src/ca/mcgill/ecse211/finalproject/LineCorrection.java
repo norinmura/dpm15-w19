@@ -10,14 +10,32 @@ import lejos.robotics.SampleProvider;
 public class LineCorrection {
 
   /* PRIVATE FIELDS */
-  private SampleProvider myColorStatus1; // The sample provider for the color sensor
-  private float[] sampleColor1; // The data buffer for the color sensor reading
-  private SampleProvider myColorStatus2; // The sample provider for the color sensor
-  private float[] sampleColor2; // The data buffer for the color sensor reading
+  /**
+   * The sample provider for the color sensor
+   */
+  private SampleProvider myColorStatus1;
+  /**
+   * The data buffer for the color sensor reading
+   */
+  private float[] sampleColor1;
+  /**
+   * The sample provider for the color sensor
+   */
+  private SampleProvider myColorStatus2;
+  /**
+   * The data buffer for the color sensor reading
+   */
+  private float[] sampleColor2;
 
   /* CONSTANTS */
-  double[] last = {Math.PI, Math.PI}; // Initialize the last variable to a specific number
-  double[] current = {0, 0}; // last and current are both used for differential filter
+  /**
+   * Initialize the last variable to a specific number
+   */
+  double[] last = {Math.PI, Math.PI};
+  /**
+   * Last and current are both used for differential filter
+   */
+  double[] current = {0, 0};
 
   /**
    * This is a constructor for LineCorrection.
@@ -57,7 +75,7 @@ public class LineCorrection {
       current[0] = sampleColor1[0]; // Update the current
     }
     System.out.println("");
-    
+
     /* Detect the differential */
     if ((current[0] - last[0]) * 1000 < -40) { // If there is a black line detected
       System.out.println("");
@@ -86,7 +104,7 @@ public class LineCorrection {
       current[1] = sampleColor2[0]; // Update the current
     }
     System.out.println("");
-    
+
     /* Detect the differential */
     if ((current[1] - last[1]) * 1000 < -40) { // If there is a black line detected
       System.out.println("");

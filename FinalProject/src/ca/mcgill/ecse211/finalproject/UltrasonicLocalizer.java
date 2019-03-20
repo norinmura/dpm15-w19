@@ -18,36 +18,94 @@ import lejos.robotics.SampleProvider;
  * @author Floria Peng
  */
 public class UltrasonicLocalizer implements Runnable {
-  
+
   /* STATIC FIELDS */
-  public static final int INFINITY_DISTANCE = 50; // The distance that the sensor consider the robot
-                                                  // is not facing the wall
-  public static final int FULL_TURN = 360; // 360 degree for a circle
-  private static final int ACCELERATION = 3000; // The acceleration of the motor
+  /**
+   * The distance that the sensor consider the robot is not facing the wall
+   */
+  public static final int INFINITY_DISTANCE = 50;
+  /**
+   * 360 degree for a circle
+   */
+  public static final int FULL_TURN = 360;
+  /**
+   * The acceleration of the motor
+   */
+  private static final int ACCELERATION = 3000;
 
   /* PRIVATE FIELDS */
-  private Odometer odometer; // The odometer instance
-  private EV3LargeRegulatedMotor leftMotor; // The left motor of the robot
-  private EV3LargeRegulatedMotor rightMotor; // The right motor of the robot
-  private SampleProvider us; // The sample provider for the ultrasonic sensor
-  private float[] usData; // The data buffer for the ultrasonic sensor reading
-  private Navigation navigation; // The instance of navigation
-  
+  /**
+   * The odometer instance
+   */
+  private Odometer odometer;
+  /**
+   * The left motor of the robot
+   */
+  private EV3LargeRegulatedMotor leftMotor;
+  /**
+   * The right motor of the robot
+   */
+  private EV3LargeRegulatedMotor rightMotor;
+  /**
+   * The sample provider for the ultrasonic sensor
+   */
+  private SampleProvider us;
+  /**
+   * The data buffer for the ultrasonic sensor reading
+   */
+  private float[] usData;
+  /**
+   * The instance of navigation
+   */
+  private Navigation navigation;
+
   /* FIELDS */
-  double leftRadius; // The left wheel radius of the robot
-  double rightRadius; // The right wheel radius of the robot
-  double track; // The track of the robot (by measuring the distance between the center of both
-                // wheel)
+  /**
+   * The left wheel radius of the robot
+   */
+  double leftRadius;
+  /**
+   * The right wheel radius of the robot
+   */
+  double rightRadius;
+  /**
+   * The track of the robot (by measuring the distance between the center of both wheel)
+   */
+  double track;
 
   /* CONSTANTS */
-  int d = 35; // An arbitrary distance that the robot record the angle (first/last below)
-  int k = 1; // To eliminate the noise
-  double first = 0; // The first angle that falls into the band (d+/-k)
-  double last = 0; // The last angle that falls into the band (d+/-k)
-  int count = 0; // +1 for having already obtained a first or last
-  double alpha = 0; // The angle when detecting the back wall
-  double beta = 0; // The angle when detecting the left wall
-  double error = 0; // The angle error
+  /**
+   * An arbitrary distance that the robot record the angle (first/last below)
+   */
+  int d = 35;
+  /**
+   * To eliminate the noise
+   */
+  int k = 1;
+  /**
+   * The first angle that falls into the band (d+/-k)
+   */
+  double first = 0;
+  /**
+   * The last angle that falls into the band (d+/-k)
+   */
+  double last = 0;
+  /**
+   * +1 for having already obtained a first or last
+   */
+  int count = 0;
+  /**
+   * The angle when detecting the back wall
+   */
+  double alpha = 0;
+  /**
+   * The angle when detecting the left wall
+   */
+  double beta = 0;
+  /**
+   * The angle error
+   */
+  double error = 0;
 
   /**
    * The constructor of this class.
@@ -229,7 +287,7 @@ public class UltrasonicLocalizer implements Runnable {
    * 
    * @return
    */
-  double filter() { // TODO debug
+  double filter() {
     double[] arr = new double[5]; // store readings
     for (int i = 0; i < 5; i++) { // take 5 readings
       us.fetchSample(usData, 0); // store reading in buffer
