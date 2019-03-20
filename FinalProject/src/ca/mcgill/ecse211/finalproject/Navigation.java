@@ -336,7 +336,6 @@ public class Navigation {
     leftMotor.rotate(convertDistance(leftRadius, travel), true);
     rightMotor.rotate(convertDistance(rightRadius, travel), true);
 
-    // TODO error, only correct once
     while (leftMotor.isMoving() || rightMotor.isMoving()) {
       correctAngle(x, y, 2); // The third variable is to indicate which method is calling
                              // correctAngle

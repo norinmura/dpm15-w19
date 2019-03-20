@@ -387,7 +387,7 @@ public class FinalProject {
     }
 
     /* Traverse the search map and navigate */
-    // Traveling to island and iterating the map TODO
+    // Traveling to island and iterating the map
     int i = 0;
     if (redTeam == TEAM_NUMBER) {
       navigation.travelTo(1 * TILE_SIZE, tn_ll_y * TILE_SIZE); // up

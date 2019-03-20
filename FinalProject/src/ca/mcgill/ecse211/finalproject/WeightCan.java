@@ -23,7 +23,7 @@ public class WeightCan implements Runnable {
   /**
    * Angle to lift
    */
-  private static final int ANGLE = 80; //TODO
+  private static final int ANGLE = 80;
   /**
    * The power to lift a light can but not the heavy can
    */
@@ -36,7 +36,7 @@ public class WeightCan implements Runnable {
    * Time to wait before we request the ultrasonic sensor
    */
   private static final int WAIT_TIME = 1000; 
-  // to say whether or not it still detects a can. TODO
+  // to say whether or not it still detects a can.
   /**
    * Threshold value read by ultrasonic sensor to check whether the can was lifted
    */

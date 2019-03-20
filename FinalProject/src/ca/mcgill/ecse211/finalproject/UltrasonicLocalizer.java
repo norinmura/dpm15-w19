@@ -287,7 +287,7 @@ public class UltrasonicLocalizer implements Runnable {
    * 
    * @return
    */
-  double filter() { // TODO debug
+  double filter() {
     double[] arr = new double[5]; // store readings
     for (int i = 0; i < 5; i++) { // take 5 readings
       us.fetchSample(usData, 0); // store reading in buffer
