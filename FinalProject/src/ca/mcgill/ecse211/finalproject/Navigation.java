@@ -52,6 +52,26 @@ public class Navigation {
    * The tile size of the board that the robot is running on
    */
   public static final double TILE_SIZE = 30.48; // The tile size used for demo
+  /**
+   * The move method speed adjustment
+   */
+  public static final int MOVE_ADJ = 40;
+  /**
+   * The rotate method speed adjustment
+   */
+  public static final int ROTATE_ADJ = 10;
+  /**
+   * The back method speed adjustment
+   */
+  public static final int BACK_ADJ = 50;
+  /**
+   * The maximum power of the claw
+   */
+  public static final int MAX_POWER = 35;
+  /**
+   * The time out for the line correction method
+   */
+  public static final int TIMER = 20;
 
   /* PRIVATE FIELDS */
   /**
@@ -249,7 +269,7 @@ public class Navigation {
                              // correctAngle
       detectCan();
       if (get_can) {
-        weightcan.claw_close(30); // Power 30
+        weightcan.claw_close(MAX_POWER); // Power 30
         rotate(FULL_TURN / 2);
         forward(TILE_SIZE / 3, 0);
         weightcan.claw_open();
@@ -462,7 +482,7 @@ public class Navigation {
           + Math.pow((odometer.getXYT()[1] - y), 2)) < TILE_SIZE / 2) {
         break;
       }
-      while (delay < 20) {
+      while (delay < TIMER) { // A small timer, 20 * 50 ms = 1s
         delay++;
         try {
           Thread.sleep(50);
@@ -515,8 +535,8 @@ public class Navigation {
    */
   void move(double distance) {
 
-    leftMotor.setSpeed(FORWARD_SPEED + 40);
-    rightMotor.setSpeed(FORWARD_SPEED + 40);
+    leftMotor.setSpeed(FORWARD_SPEED + MOVE_ADJ);
+    rightMotor.setSpeed(FORWARD_SPEED + MOVE_ADJ);
 
     leftMotor.rotate(convertDistance(leftRadius, distance), true);
     rightMotor.rotate(convertDistance(rightRadius, distance), true);
@@ -560,8 +580,8 @@ public class Navigation {
 
     distance = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)); // The travel distance
 
-    leftMotor.setSpeed(FORWARD_SPEED + 50);
-    rightMotor.setSpeed(FORWARD_SPEED + 50);
+    leftMotor.setSpeed(FORWARD_SPEED + BACK_ADJ);
+    rightMotor.setSpeed(FORWARD_SPEED + BACK_ADJ);
     leftMotor.rotate(-convertDistance(leftRadius, distance), true);
     rightMotor.rotate(-convertDistance(rightRadius, distance), false);
 
@@ -580,7 +600,6 @@ public class Navigation {
    * @param y - The y distance the robot should move
    */
   void backTo(double x, double y) {
-    Sound.playTone(440, 500);
 
     /* Calculate move angle and distance */
     lastx = odometer.getXYT()[0]; // The last x position of the robot
@@ -640,7 +659,7 @@ public class Navigation {
         turnTo(angles[2]); // Turn towards the can
         goTo(distances[2] * 1.5); // Go towards the can
         if (get_can) { // If this is a can, returned in detectCan
-          weightcan.claw_close(30); // power 30
+          weightcan.claw_close(MAX_POWER); // power 35
         }
         backTo(x, y);
         if (get_can) { // If this is a can
@@ -721,8 +740,8 @@ public class Navigation {
    */
   void rotate(double theta) {
 
-    leftMotor.setSpeed(ROTATE_SPEED + 10);
-    rightMotor.setSpeed(ROTATE_SPEED + 10);
+    leftMotor.setSpeed(ROTATE_SPEED + ROTATE_ADJ);
+    rightMotor.setSpeed(ROTATE_SPEED + ROTATE_ADJ);
 
     leftMotor.rotate(convertAngle(leftRadius, track, theta), true);
     rightMotor.rotate(-convertAngle(rightRadius, track, theta), false);

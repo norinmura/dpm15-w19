@@ -45,6 +45,10 @@ public class WeightCan implements Runnable {
    * Distance that determines out of bound
    */
   private static final int OUT_OF_BOUND = 20000;
+  /**
+   * Time out for claw to move
+   */
+  private static final int TIMER = 60;
 
   /* Fields */
   /**
@@ -110,7 +114,7 @@ public class WeightCan implements Runnable {
         Thread.sleep(50);
       } catch (Exception e) {
       }
-      if (i > 60) {
+      if (i > TIMER) { // A small timer counter
         i = 0;
         break;
       }
@@ -131,7 +135,7 @@ public class WeightCan implements Runnable {
         Thread.sleep(50);
       } catch (Exception e) {
       }
-      if (i > 60) {
+      if (i > TIMER) { // A small timer counter
         i = 0;
         break;
       }
