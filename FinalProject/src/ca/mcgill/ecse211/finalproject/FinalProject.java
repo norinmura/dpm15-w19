@@ -158,6 +158,11 @@ public class FinalProject {
    */
   public static final double TUNNEL_ADJ = 2; // More distance when traveling through the tunnel
   /**
+   * Travel back distance (distance between wheels and sensors)
+   */
+  private static final double BACK_DIST = 9.0; // Travel back distance (distance between wheels and
+                                               // sensors)
+  /**
    * Time to display
    */
   private static final long TIME_OUT = 270000; // 270000
@@ -413,11 +418,11 @@ public class FinalProject {
       navigation.correction = false;
       navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
       lightlocalizer.correctAngle(); // when a line is detected, correct angle
-      navigation.back(0, 9.0); // Go back the offset distance between the wheels and sensors
+      navigation.back(0, BACK_DIST); // Go back the offset distance between the wheels and sensors
       navigation.rotate(-FULL_TURN / 4);
       navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
       lightlocalizer.correctAngle(); // when a line is detected, correct angle
-      navigation.back(0, 9.0); // Go back the offset distance between the wheels and sensors
+      navigation.back(0, BACK_DIST); // Go back the offset distance between the wheels and sensors
       odometer.position[2] = Math.toRadians(0);
       odometer.setXYT((tn_ll_x - 1) * TILE_SIZE, tn_ll_y * TILE_SIZE, 0);
       try {
@@ -436,11 +441,11 @@ public class FinalProject {
       // After the tunnel, do the localization again
       navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
       lightlocalizer.correctAngle(); // when a line is detected, correct angle
-      navigation.back(0, 9.0); // Go back the offset distance between the wheels and sensors
+      navigation.back(0, BACK_DIST); // Go back the offset distance between the wheels and sensors
       navigation.rotate(FULL_TURN / 4);
       navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
       lightlocalizer.correctAngle(); // when a line is detected, correct angle
-      navigation.back(0, 9.0); // Go back the offset distance between the wheels and sensors
+      navigation.back(0, BACK_DIST); // Go back the offset distance between the wheels and sensors
       odometer.position[2] = Math.toRadians(FULL_TURN / 2);
       odometer.setXYT((tn_ur_x + 1) * TILE_SIZE, tn_ll_y * TILE_SIZE, FULL_TURN / 2);
       try {
@@ -486,11 +491,11 @@ public class FinalProject {
           navigation.correction = false;
           navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
           lightlocalizer.correctAngle(); // when a line is detected, correct angle
-          navigation.back(0, 9.0); // Go back the offset distance between the wheels and sensors
+          navigation.back(0, BACK_DIST); // Go back the offset distance between the wheels and sensors
           navigation.rotate(-FULL_TURN / 4);
           navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
           lightlocalizer.correctAngle(); // when a line is detected, correct angle
-          navigation.back(0, 9.0); // Go back the offset distance between the wheels and sensors
+          navigation.back(0, BACK_DIST); // Go back the offset distance between the wheels and sensors
           odometer.position[2] = Math.toRadians(0);
           odometer.setXYT(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE, 0);
           try {
@@ -502,11 +507,11 @@ public class FinalProject {
           navigation.correction = false;
           navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
           lightlocalizer.correctAngle(); // when a line is detected, correct angle
-          navigation.back(0, 9.0); // Go back the offset distance between the wheels and sensors
+          navigation.back(0, BACK_DIST); // Go back the offset distance between the wheels and sensors
           navigation.rotate(FULL_TURN / 4);
           navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
           lightlocalizer.correctAngle(); // when a line is detected, correct angle
-          navigation.back(0, 9.0); // Go back the offset distance between the wheels and sensors
+          navigation.back(0, BACK_DIST); // Go back the offset distance between the wheels and sensors
           odometer.position[2] = Math.toRadians(0);
           odometer.setXYT(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE, 0);
           try {

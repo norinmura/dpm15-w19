@@ -21,24 +21,54 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
 public class Odometer extends OdometerData implements Runnable {
 
   /* STATIC FIELD */
-  private static Odometer odo = null; // Returned as singleton
+  /**
+   * Returned as singleton
+   */
+  private static Odometer odo = null;
 
   /* PRIVATE FIELDS */
+  /**
+   * Private field of odometer data
+   */
   private OdometerData odoData;
 
   // Motors and related variables
+  /**
+   * Left motor tachoCount
+   */
   private int leftMotorTachoCount;
+  /**
+   * Right motor tachocount
+   */
   private int rightMotorTachoCount;
+  /**
+   * Left motor
+   */
   private EV3LargeRegulatedMotor leftMotor;
+  /**
+   * Right motor
+   */
   private EV3LargeRegulatedMotor rightMotor;
 
+  /**
+   * Track value to turn correctly
+   */
   private final double TRACK;
+  /**
+   * Wheel radius to move accurately
+   */
   private final double WHEEL_RAD;
 
   /* FIELD */
+  /**
+   * Position array: X, Y, Theta
+   */
   public double[] position = new double[3];
 
   /* CONSTANT */
+  /**
+   * Length of cycle
+   */
   private static final long ODOMETER_PERIOD = 25; // odometer update period in ms
 
   /**
@@ -52,7 +82,7 @@ public class Odometer extends OdometerData implements Runnable {
   private Odometer(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor,
       final double TRACK, final double WHEEL_RAD) throws OdometerExceptions {
     odoData = OdometerData.getOdometerData(); // Allows access to x,y,z
-                                              // manipulation methods
+    // manipulation methods
     this.leftMotor = leftMotor;
     this.rightMotor = rightMotor;
 
@@ -125,8 +155,8 @@ public class Odometer extends OdometerData implements Runnable {
 
       // TODO Calculate new robot position based on tachometer counts
       double dx, dy, dl, dr, dc, dtheta; // change in x, change in y, change in left motor
-                                         // change in right motor, change in the center of the motor
-                                         // change in angle of the robot
+      // change in right motor, change in the center of the motor
+      // change in angle of the robot
 
       dl = Math.PI / 180 * WHEEL_RAD * (leftMotorTachoCount - lastleftMotorTachoCount);
       // The distance the left wheel goes
@@ -145,7 +175,7 @@ public class Odometer extends OdometerData implements Runnable {
 
       // TODO Update odometer values with new calculated values
       odo.update(dx, dy, Math.toDegrees(dtheta)); // Update and store the calculated value to the
-                                                  // OdometerData
+      // OdometerData
 
       // this ensures that the odometer only runs once every period
       updateEnd = System.currentTimeMillis();

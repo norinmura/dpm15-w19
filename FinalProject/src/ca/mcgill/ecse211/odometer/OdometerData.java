@@ -18,28 +18,46 @@ public class OdometerData {
 
   /* FIELDS */
   // Position parameters
-  private volatile double x; // x-axis position
-  private volatile double y; // y-axis position
-  private volatile double theta; // Head angle
+  /**
+   * x-axis position
+   */
+  private volatile double x;
+  /**
+   * y-axis position
+   */
+  private volatile double y;
+  /**
+   * Head angle
+   */
+  private volatile double theta;
 
   /* Class control variables */
-  private volatile static int numberOfIntances = 0; // Number of OdometerData
-                                                    // objects instantiated
-                                                    // so far
-  private static final int MAX_INSTANCES = 1; // Maximum number of
-                                              // OdometerData instances
+  /**
+   * Number of OdometerData objects instantiated so far
+   */
+  private volatile static int numberOfIntances = 0;
+  /**
+   * Maximum number of OdometerData instances
+   */
+  private static final int MAX_INSTANCES = 1;
 
   /* Thread control tools */
-  private static Lock lock = new ReentrantLock(true); // Fair lock for
-                                                      // concurrent writing
-  private volatile boolean isReseting = false; // Indicates if a thread is
-                                               // trying to reset any
-                                               // position parameters
-  private Condition doneReseting = lock.newCondition(); // Let other threads
-                                                        // know that a reset
-                                                        // operation is
-                                                        // over.
+  /**
+   * Fair lock for concurrent writing
+   */
+  private static Lock lock = new ReentrantLock(true);
+  /**
+   * Indicates if a thread is trying to reset any position parameters
+   */
+  private volatile boolean isReseting = false;
+  /**
+   * Let other threads know that a reset operation is over.
+   */
+  private Condition doneReseting = lock.newCondition();
 
+  /**
+   * OdometerData instance
+   */
   private static OdometerData odoData = null;
 
   /**
