@@ -219,8 +219,6 @@ public class FinalProject {
         corner = ll_x = ll_y = ur_x = ur_y = tn_ll_x = tn_ll_y = tn_ur_x = tn_ur_y = sz_ll_x =
             sz_ll_y = sz_ur_x = sz_ur_y = island_ll_x = island_ll_y = island_ur_x = island_ur_y = 0;
 
-    int target_color = 0;
-
     // Connect to server and get the data, catching any errors that might occur
     try {
       /**
@@ -245,8 +243,6 @@ public class FinalProject {
 
       greenTeam = ((Long) data.get("GreenTeam")).intValue();
       System.out.println("Green Team: " + greenTeam);
-
-      target_color = greenTeam;
 
       if (redTeam == TEAM_NUMBER) {
         // Red team's starting corner
@@ -285,21 +281,58 @@ public class FinalProject {
         System.out.println("SZR_UR_x: " + sz_ur_x);
         sz_ur_y = ((Long) data.get("SZR_UR_y")).intValue();
         System.out.println("SZR_UR_y: " + sz_ur_y);
+        
+      } else if (greenTeam == TEAM_NUMBER) {
+        // Green team's starting corner
+        corner = ((Long) data.get("GreenCorner")).intValue();
+        System.out.println("GreenCorner: " + corner);
 
-        // Lower left hand corner of the Island
-        island_ll_x = ((Long) data.get("Island_LL_x")).intValue();
-        System.out.println("Island_LL_x: " + island_ll_x);
-        island_ll_y = ((Long) data.get("Island_LL_y")).intValue();
-        System.out.println("Island_LL_y: " + island_ll_y);
-        // Upper right hand corner of the Island
-        island_ur_x = ((Long) data.get("Island_UR_x")).intValue();
-        System.out.println("Island_UR_x: " + island_ur_x);
-        island_ur_y = ((Long) data.get("Island_UR_y")).intValue();
-        System.out.println("Island_UR_y: " + island_ur_y);
-      } else {
-        System.exit(0);
+        // Lower left hand corner of Green Zone
+        ll_x = ((Long) data.get("Green_LL_x")).intValue();
+        System.out.println("Green_LL_x: " + ll_x);
+        ll_y = ((Long) data.get("Green_LL_y")).intValue();
+        System.out.println("Green_LL_y: " + ll_y);
+        // Upper right hand corner of Green Zone
+        ur_x = ((Long) data.get("Green_UR_x")).intValue();
+        System.out.println("Green_UR_x: " + ur_x);
+        ur_y = ((Long) data.get("Green_UR_y")).intValue();
+        System.out.println("Green_UR_y: " + ur_y);
+
+        // Lower left hand corner of the red tunnel footprint
+        tn_ll_x = ((Long) data.get("TNG_LL_x")).intValue();
+        System.out.println("TNG_LL_x: " + tn_ll_x);
+        tn_ll_y = ((Long) data.get("TNG_LL_y")).intValue();
+        System.out.println("TNG_LL_y: " + tn_ll_y);
+        // Upper right hand corner of the red tunnel footprint
+        tn_ur_x = ((Long) data.get("TNG_UR_x")).intValue();
+        System.out.println("TNG_UR_x: " + tn_ur_x);
+        tn_ur_y = ((Long) data.get("TNG_UR_y")).intValue();
+        System.out.println("TNG_UR_y: " + tn_ur_y);
+
+        // Lower left hand corner of the green player search zone
+        sz_ll_x = ((Long) data.get("SZG_LL_x")).intValue();
+        System.out.println("SZG_LL_x: " + sz_ll_x);
+        sz_ll_y = ((Long) data.get("SZG_LL_y")).intValue();
+        System.out.println("SZG_LL_y: " + sz_ll_y);
+        // Upper right hand corner of the green player search zone
+        sz_ur_x = ((Long) data.get("SZG_UR_x")).intValue();
+        System.out.println("SZG_UR_x: " + sz_ur_x);
+        sz_ur_y = ((Long) data.get("SZG_UR_y")).intValue();
+        System.out.println("SZG_UR_y: " + sz_ur_y);
+        
       }
-
+      
+      // Lower left hand corner of the Island
+      island_ll_x = ((Long) data.get("Island_LL_x")).intValue();
+      System.out.println("Island_LL_x: " + island_ll_x);
+      island_ll_y = ((Long) data.get("Island_LL_y")).intValue();
+      System.out.println("Island_LL_y: " + island_ll_y);
+      // Upper right hand corner of the Island
+      island_ur_x = ((Long) data.get("Island_UR_x")).intValue();
+      System.out.println("Island_UR_x: " + island_ur_x);
+      island_ur_y = ((Long) data.get("Island_UR_y")).intValue();
+      System.out.println("Island_UR_y: " + island_ur_y);
+      
     } catch (Exception e) {
       System.err.println("Error: " + e.getMessage());
     }
@@ -308,8 +341,6 @@ public class FinalProject {
 
     // instance of Odometer
     Odometer odometer = Odometer.getOdometer(leftMotor, rightMotor, TRACK, WHEEL_RAD);
-
-    Display odometryDisplay = new Display(lcd); // instance of Display
 
     ColorClassification colorclassification =
         new ColorClassification(usDistance, usData, colorReading, colorData); // instance of
@@ -322,7 +353,7 @@ public class FinalProject {
         new LineCorrection(myColorStatus1, sampleColor1, myColorStatus2, sampleColor2);
 
     Navigation navigation = new Navigation(odometer, leftMotor, rightMotor, sensorMotor,
-        colorclassification, weightcan, linecorrection, WHEEL_RAD, WHEEL_RAD, TRACK, target_color); // instance
+        colorclassification, weightcan, linecorrection, WHEEL_RAD, WHEEL_RAD, TRACK); // instance
                                                                                                     // of
     // Navigation
 
@@ -338,10 +369,6 @@ public class FinalProject {
     // Starting odometer thread
     Thread odoThread = new Thread(odometer);
     odoThread.start();
-
-    // Starting display thread
-    Thread odoDisplayThread = new Thread(odometryDisplay);
-    odoDisplayThread.start();
 
     // Start the thread for us localizer
     Thread usThread = new Thread(uslocalizer);

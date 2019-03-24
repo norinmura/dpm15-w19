@@ -180,10 +180,6 @@ public class Navigation {
    */
   double[] distances = new double[3];
   /**
-   * The target can color
-   */
-  double target_color = -1;
-  /**
    * The angle that the roundSearch method should end
    */
   double end_angle = 0; // The angle left for rotate search
@@ -216,7 +212,7 @@ public class Navigation {
   public Navigation(Odometer odometer, EV3LargeRegulatedMotor leftMotor,
       EV3LargeRegulatedMotor rightMotor, EV3MediumRegulatedMotor sensorMotor,
       ColorClassification colorclassification, WeightCan weightcan, LineCorrection linecorrection,
-      double leftRadius, double rightRadius, double track, int target_color)
+      double leftRadius, double rightRadius, double track)
       throws OdometerExceptions {
     this.odometer = odometer;
     this.leftMotor = leftMotor;
@@ -228,7 +224,6 @@ public class Navigation {
     this.leftRadius = leftRadius;
     this.rightRadius = rightRadius;
     this.track = track;
-    this.target_color = target_color;
   }
 
   /**
@@ -440,15 +435,7 @@ public class Navigation {
       sensorMotor.setSpeed(ROTATE_SPEED); // set the scanning speed
       sensorMotor.rotate(FULL_TURN, true); // The sensor motor will rotate less than 180
                                            // degree (as we are using a gear)
-      if (colorclassification.color == target_color) {
-        for (int i = 0; i < 10; i++) {
-          Sound.beep();
-          try {
-            Thread.sleep(50);
-          } catch (Exception e) {
-          }
-        }
-      }
+      
       get_can = true; // The robot is getting a can
     }
   }
