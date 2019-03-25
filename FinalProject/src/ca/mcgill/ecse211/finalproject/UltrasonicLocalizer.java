@@ -23,7 +23,7 @@ public class UltrasonicLocalizer implements Runnable {
   /**
    * The distance that the sensor consider the robot is not facing the wall
    */
-  public static final int INFINITY_DISTANCE = 50;
+  public static final int INFINITY_DISTANCE = 70;
   /**
    * 360 degree for a circle
    */
@@ -150,7 +150,7 @@ public class UltrasonicLocalizer implements Runnable {
     } else { // Rising edge
       risingEdge(); // Call the risingEdge method
     }*/
-    navigation.turn(FULL_TURN); // The robot will rotate clockwise for a full turn until disrupted
+    navigation.turn(-FULL_TURN); // The robot will rotate clockwise for a full turn until disrupted
     while (rightMotor.isMoving() || leftMotor.isMoving()) {
       if (filter() > INFINITY_DISTANCE) { // If the robot is not facing the wall
         leftMotor.setAcceleration(ACCELERATION);
@@ -189,8 +189,16 @@ public class UltrasonicLocalizer implements Runnable {
     rightMotor.stop(false);
     alpha = (first + last) / 2;
 
-    navigation.rotate(-FULL_TURN / 4); // The robot will rotate 90 degrees first before the next
-    // detect, to avoid detecting the same wall twice
+    // The robot will rotate 90 degrees first before the next detect, to avoid detecting the same
+    // wall twice
+    navigation.turn(-FULL_TURN / 4);
+    while (navigation.isNavigating()) {
+      // Wait for completion
+      try {
+        Thread.sleep(50);
+      } catch (Exception e) {
+      }
+    }
 
     // Detect left wall
     navigation.turn(-FULL_TURN);

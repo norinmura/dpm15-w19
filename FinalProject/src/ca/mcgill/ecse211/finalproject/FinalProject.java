@@ -79,7 +79,7 @@ public class FinalProject {
    * The IP address of the server
    */
 
-  private static final String SERVER_IP = "192.168.2.3";
+  private static final String SERVER_IP = "192.168.2.11";
 
   /**
    * The team number of the user
@@ -144,7 +144,7 @@ public class FinalProject {
   /**
    * The track width of the robot
    */
-  public static final double TRACK = 13.20; // The width of the robot measured
+  public static final double TRACK = 13.71; // The width of the robot measured
   /**
    * The angle for a full turn is 360 degrees
    */
@@ -219,8 +219,6 @@ public class FinalProject {
         corner = ll_x = ll_y = ur_x = ur_y = tn_ll_x = tn_ll_y = tn_ur_x = tn_ur_y = sz_ll_x =
             sz_ll_y = sz_ur_x = sz_ur_y = island_ll_x = island_ll_y = island_ur_x = island_ur_y = 0;
 
-    int target_color = 0;
-
     // Connect to server and get the data, catching any errors that might occur
     try {
       /**
@@ -241,65 +239,68 @@ public class FinalProject {
 
       // Example 2 : Print out specific values
       redTeam = ((Long) data.get("RedTeam")).intValue();
-      System.out.println("Red Team: " + redTeam);
 
       greenTeam = ((Long) data.get("GreenTeam")).intValue();
-      System.out.println("Green Team: " + greenTeam);
-
-      target_color = greenTeam;
 
       if (redTeam == TEAM_NUMBER) {
         // Red team's starting corner
         corner = ((Long) data.get("RedCorner")).intValue();
-        System.out.println("RedCorner: " + corner);
 
         // Lower left hand corner of Red Zone
         ll_x = ((Long) data.get("Red_LL_x")).intValue();
-        System.out.println("Red_LL_x: " + ll_x);
         ll_y = ((Long) data.get("Red_LL_y")).intValue();
-        System.out.println("Red_LL_y: " + ll_y);
         // Upper right hand corner of Red Zone
         ur_x = ((Long) data.get("Red_UR_x")).intValue();
-        System.out.println("Red_UR_x: " + ur_x);
         ur_y = ((Long) data.get("Red_UR_y")).intValue();
-        System.out.println("Red_UR_y: " + ur_y);
 
         // Lower left hand corner of the red tunnel footprint
         tn_ll_x = ((Long) data.get("TNR_LL_x")).intValue();
-        System.out.println("TNR_LL_x: " + tn_ll_x);
         tn_ll_y = ((Long) data.get("TNR_LL_y")).intValue();
-        System.out.println("TNR_LL_y: " + tn_ll_y);
         // Upper right hand corner of the red tunnel footprint
         tn_ur_x = ((Long) data.get("TNR_UR_x")).intValue();
-        System.out.println("TNR_UR_x: " + tn_ur_x);
         tn_ur_y = ((Long) data.get("TNR_UR_y")).intValue();
-        System.out.println("TNR_UR_y: " + tn_ur_y);
 
         // Lower left hand corner of the red player search zone
         sz_ll_x = ((Long) data.get("SZR_LL_x")).intValue();
-        System.out.println("SZR_LL_x: " + sz_ll_x);
         sz_ll_y = ((Long) data.get("SZR_LL_y")).intValue();
-        System.out.println("SZR_LL_y: " + sz_ll_y);
         // Upper right hand corner of the red player search zone
         sz_ur_x = ((Long) data.get("SZR_UR_x")).intValue();
-        System.out.println("SZR_UR_x: " + sz_ur_x);
         sz_ur_y = ((Long) data.get("SZR_UR_y")).intValue();
-        System.out.println("SZR_UR_y: " + sz_ur_y);
+        
+      } else if (greenTeam == TEAM_NUMBER) {
+        // Green team's starting corner
+        corner = ((Long) data.get("GreenCorner")).intValue();
 
-        // Lower left hand corner of the Island
-        island_ll_x = ((Long) data.get("Island_LL_x")).intValue();
-        System.out.println("Island_LL_x: " + island_ll_x);
-        island_ll_y = ((Long) data.get("Island_LL_y")).intValue();
-        System.out.println("Island_LL_y: " + island_ll_y);
-        // Upper right hand corner of the Island
-        island_ur_x = ((Long) data.get("Island_UR_x")).intValue();
-        System.out.println("Island_UR_x: " + island_ur_x);
-        island_ur_y = ((Long) data.get("Island_UR_y")).intValue();
-        System.out.println("Island_UR_y: " + island_ur_y);
-      } else {
-        System.exit(0);
+        // Lower left hand corner of Green Zone
+        ll_x = ((Long) data.get("Green_LL_x")).intValue();
+        ll_y = ((Long) data.get("Green_LL_y")).intValue();
+        // Upper right hand corner of Green Zone
+        ur_x = ((Long) data.get("Green_UR_x")).intValue();
+        ur_y = ((Long) data.get("Green_UR_y")).intValue();
+
+        // Lower left hand corner of the red tunnel footprint
+        tn_ll_x = ((Long) data.get("TNG_LL_x")).intValue();
+        tn_ll_y = ((Long) data.get("TNG_LL_y")).intValue();
+        // Upper right hand corner of the red tunnel footprint
+        tn_ur_x = ((Long) data.get("TNG_UR_x")).intValue();
+        tn_ur_y = ((Long) data.get("TNG_UR_y")).intValue();
+
+        // Lower left hand corner of the green player search zone
+        sz_ll_x = ((Long) data.get("SZG_LL_x")).intValue();
+        sz_ll_y = ((Long) data.get("SZG_LL_y")).intValue();
+        // Upper right hand corner of the green player search zone
+        sz_ur_x = ((Long) data.get("SZG_UR_x")).intValue();
+        sz_ur_y = ((Long) data.get("SZG_UR_y")).intValue();
+        
       }
-
+      
+      // Lower left hand corner of the Island
+      island_ll_x = ((Long) data.get("Island_LL_x")).intValue();
+      island_ll_y = ((Long) data.get("Island_LL_y")).intValue();
+      // Upper right hand corner of the Island
+      island_ur_x = ((Long) data.get("Island_UR_x")).intValue();
+      island_ur_y = ((Long) data.get("Island_UR_y")).intValue();
+      
     } catch (Exception e) {
       System.err.println("Error: " + e.getMessage());
     }
@@ -308,8 +309,6 @@ public class FinalProject {
 
     // instance of Odometer
     Odometer odometer = Odometer.getOdometer(leftMotor, rightMotor, TRACK, WHEEL_RAD);
-
-    Display odometryDisplay = new Display(lcd); // instance of Display
 
     ColorClassification colorclassification =
         new ColorClassification(usDistance, usData, colorReading, colorData); // instance of
@@ -322,7 +321,7 @@ public class FinalProject {
         new LineCorrection(myColorStatus1, sampleColor1, myColorStatus2, sampleColor2);
 
     Navigation navigation = new Navigation(odometer, leftMotor, rightMotor, sensorMotor,
-        colorclassification, weightcan, linecorrection, WHEEL_RAD, WHEEL_RAD, TRACK, target_color); // instance
+        colorclassification, weightcan, linecorrection, WHEEL_RAD, WHEEL_RAD, TRACK); // instance
                                                                                                     // of
     // Navigation
 
@@ -339,10 +338,6 @@ public class FinalProject {
     Thread odoThread = new Thread(odometer);
     odoThread.start();
 
-    // Starting display thread
-    Thread odoDisplayThread = new Thread(odometryDisplay);
-    odoDisplayThread.start();
-
     // Start the thread for us localizer
     Thread usThread = new Thread(uslocalizer);
     usThread.start();
@@ -354,9 +349,21 @@ public class FinalProject {
     lightThread.join();
 
     Sound.beep();
+    
+    double[][] tunnel_points = getPoints(corner, tn_ll_x, tn_ll_y, tn_ur_x, tn_ur_y);
+    navigation.travelTo(tunnel_points[0][0] * TILE_SIZE, tunnel_points[0][1] * TILE_SIZE);
+    localizer(navigation, lightlocalizer, odometer);
+    odometer.setXYT(tunnel_points[0][0] * TILE_SIZE, tunnel_points[0][1] * TILE_SIZE, 0);
+    sleep(50);
+    navigation.travelTo(tunnel_points[1][0] * TILE_SIZE, tunnel_points[1][1] * TILE_SIZE);
+    navigation.travelTo(tunnel_points[2][0] * TILE_SIZE, tunnel_points[2][1] * TILE_SIZE);
+    navigation.travelTo(tunnel_points[3][0] * TILE_SIZE, tunnel_points[3][1] * TILE_SIZE);
+    localizer(navigation, lightlocalizer, odometer);
+    odometer.setXYT(tunnel_points[0][0] * TILE_SIZE, tunnel_points[0][1] * TILE_SIZE, 0);
+    sleep(50);
 
     /* Generating the search map */
-    int[] upperRight = {sz_ur_x, sz_ur_y};
+    /*int[] upperRight = {sz_ur_x, sz_ur_y};
     int[] lowerLeft = {sz_ll_x, sz_ll_y};
     int horizontal = upperRight[0] - lowerLeft[0] + 1; // The x nodes that will be traveled
     int vertical = upperRight[1] - lowerLeft[1] + 1; // The y nodes that will be traveled
@@ -391,155 +398,140 @@ public class FinalProject {
       } else { // straight line can
         fullPath[i][2] = 4;
       }
-    }
+    }*/
 
     /* Traverse the search map and navigate */
     // Traveling to island and iterating the map
-    int i = 0;
-    if (redTeam == TEAM_NUMBER) {
-      navigation.travelTo(1 * TILE_SIZE, tn_ll_y * TILE_SIZE); // up
-      try {
-        Thread.sleep(50);
-      } catch (Exception e) {
-      }
-
-      if (tn_ll_x == 2) {
-        navigation.rotate(FULL_TURN / 4);
-      } else {
-        navigation.travelTo((tn_ll_x - 1) * TILE_SIZE, tn_ll_y * TILE_SIZE); // right
-      }
-
-      try {
-        Thread.sleep(50);
-      } catch (Exception e) {
-      }
-      
-      // Do the localization again
-      navigation.correction = false;
-      navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
-      lightlocalizer.correctAngle(); // when a line is detected, correct angle
-      navigation.back(0, BACK_DIST); // Go back the offset distance between the wheels and sensors
-      navigation.rotate(-FULL_TURN / 4);
-      navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
-      lightlocalizer.correctAngle(); // when a line is detected, correct angle
-      navigation.back(0, BACK_DIST); // Go back the offset distance between the wheels and sensors
-      odometer.position[2] = Math.toRadians(0);
-      odometer.setXYT((tn_ll_x - 1) * TILE_SIZE, tn_ll_y * TILE_SIZE, 0);
-      try {
-        Thread.sleep(50);
-      } catch (Exception e) {
-      }
-      navigation.correction = true;
-      
-      // Start the navigation again
-      navigation.travelTo((tn_ll_x - 1) * TILE_SIZE, (tn_ll_y + tn_ur_y) * 0.5 * TILE_SIZE + TUNNEL_ADJ);
-
-      // Run without correction to travel through the tunnel
-      navigation.correction = false;
-      navigation.runTo((tn_ur_x + 0.5) * TILE_SIZE, (tn_ll_y + tn_ur_y) * 0.5 * TILE_SIZE + TUNNEL_ADJ);
-      
-      // After the tunnel, do the localization again
-      navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
-      lightlocalizer.correctAngle(); // when a line is detected, correct angle
-      navigation.back(0, BACK_DIST); // Go back the offset distance between the wheels and sensors
-      navigation.rotate(FULL_TURN / 4);
-      navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
-      lightlocalizer.correctAngle(); // when a line is detected, correct angle
-      navigation.back(0, BACK_DIST); // Go back the offset distance between the wheels and sensors
-      odometer.position[2] = Math.toRadians(FULL_TURN / 2);
-      odometer.setXYT((tn_ur_x + 1) * TILE_SIZE, tn_ll_y * TILE_SIZE, FULL_TURN / 2);
-      try {
-        Thread.sleep(50);
-      } catch (Exception e) {
-      }
-      navigation.correction = true;
-
-      // Travel to the lower left corner of the search zone
-      navigation.travelTo((tn_ur_x + 1) * TILE_SIZE, fullPath[i][1] * TILE_SIZE); // down
-      navigation.travelTo(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE); // right
-      for (int j = 0; j < 5; j++) { // Beeps when it arrives
-        Sound.beep();
-        try {
-          Thread.sleep(50);
-        } catch (Exception e) {
-        }
-      }
-      // Search can at the lower left corner
-      navigation.turnTo(FULL_TURN / 4); // facing right
-      navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE,
-          -FULL_TURN / 4);
-      i++;
-
-      // Start searching the search zone
-      while (i < fullPath.length && (System.currentTimeMillis() - timeStart) < TIME_OUT) {
-        navigation.moveTo(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE);
-        if (fullPath[i][2] == 4) { // straight line point
-          if (odometer.getXYT()[2] < 180) {
-            navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE,
-                -FULL_TURN / 4);
-          } else {
-            navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE,
-                FULL_TURN / 4);
-          }
-        } else if (fullPath[i][2] == 1) { // right upper point
-          navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE,
-              -FULL_TURN / 4);
-        } else if (fullPath[i][2] == 3) {
-          navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE,
-              FULL_TURN / 4);
-        } else if (fullPath[i][2] == 0) { // right localize
-          navigation.correction = false;
-          navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
-          lightlocalizer.correctAngle(); // when a line is detected, correct angle
-          navigation.back(0, BACK_DIST); // Go back the offset distance between the wheels and sensors
-          navigation.rotate(-FULL_TURN / 4);
-          navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
-          lightlocalizer.correctAngle(); // when a line is detected, correct angle
-          navigation.back(0, BACK_DIST); // Go back the offset distance between the wheels and sensors
-          odometer.position[2] = Math.toRadians(0);
-          odometer.setXYT(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE, 0);
-          try {
-            Thread.sleep(50);
-          } catch (Exception e) {
-          }
-          navigation.correction = true;
-        } else if (fullPath[i][2] == 2) { // left localize
-          navigation.correction = false;
-          navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
-          lightlocalizer.correctAngle(); // when a line is detected, correct angle
-          navigation.back(0, BACK_DIST); // Go back the offset distance between the wheels and sensors
-          navigation.rotate(FULL_TURN / 4);
-          navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
-          lightlocalizer.correctAngle(); // when a line is detected, correct angle
-          navigation.back(0, BACK_DIST); // Go back the offset distance between the wheels and sensors
-          odometer.position[2] = Math.toRadians(0);
-          odometer.setXYT(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE, 0);
-          try {
-            Thread.sleep(50);
-          } catch (Exception e) {
-          }
-          navigation.correction = true;
-        }
-        i++;
-      }
-
-      Sound.beepSequence();
-      
-      // After searching return to the upper right corner
-      navigation.runTo(sz_ur_x * TILE_SIZE, sz_ur_y * TILE_SIZE);
-
-      for (int j = 0; j < 5; j++) { // Beeps when it arrives
-        Sound.beep();
-        try {
-          Thread.sleep(50);
-        } catch (Exception e) {
-        }
-      }
-    }
-
+    
+    
     /* Waiting for exit */
     // Wait here forever until button pressed to terminate the robot
     Button.waitForAnyPress();
     System.exit(0);
   }
+
+  private static double[][] getPoints(int corner, int tn_ll_x, int tn_ll_y, int tn_ur_x,
+      int tn_ur_y) {
+    boolean orientation = (tn_ur_x - tn_ll_x) > (tn_ur_y - tn_ll_y); // true if the tunnel is placed
+                                                                     // horizontally
+    int lastx, lasty, enter_angle;
+    double[][] tunnel_point = new double[2][2];
+    double[] distance = new double[2];
+    double[][] points = new double[4][2];
+    switch (corner) {
+      case 0:
+        lastx = 1;
+        lasty = 1;
+        break;
+      case 1:
+        lastx = 14;
+        lasty = 1;
+        break;
+      case 2:
+        lastx = 14;
+        lasty = 8;
+        break;
+      case 3:
+        lastx = 1;
+        lasty = 8;
+        break;
+      default:
+        lastx = -1;
+        lasty = -1;
+        break;
+    }
+    if (orientation) {
+      tunnel_point[0][0] = tn_ll_x;
+      tunnel_point[0][1] = (tn_ur_y + tn_ll_y) * 0.5;
+      tunnel_point[1][0] = tn_ur_x;
+      tunnel_point[1][1] = (tn_ur_y + tn_ll_y) * 0.5;
+    } else {
+      tunnel_point[0][0] = (float) ((tn_ur_x + tn_ll_x) * 0.5);;
+      tunnel_point[0][1] = tn_ll_y;
+      tunnel_point[1][0] = (float) ((tn_ur_x + tn_ll_x) * 0.5);;
+      tunnel_point[1][1] = tn_ur_y;
+    }
+    distance[0] = (float) Math
+        .sqrt(Math.pow(lastx - tunnel_point[0][0], 2) + Math.pow(lasty - tunnel_point[0][1], 2));
+    distance[1] = (float) Math
+        .sqrt(Math.pow(lastx - tunnel_point[1][0], 2) + Math.pow(lasty - tunnel_point[1][1], 2));
+    enter_angle = distance[0] < distance[1] ? 1 : 2; // 1 for entering at lower left, 2 for entering
+                                                     // at upper right
+    points[0][0] = points[0][1] = points[1][0] =
+        points[1][1] = points[2][0] = points[2][1] = points[3][0] = points[3][1] = -1;
+    if (enter_angle == 1) {
+      points[0][0] = localization(lastx, tunnel_point[0][0]);
+      points[0][1] = localization(lasty, tunnel_point[0][1]);
+      if (orientation) {
+        points[1][0] = points[0][0];
+        points[1][1] = tunnel_point[0][1];
+        points[2][0] = points[0][0] + 4;
+        points[2][1] = tunnel_point[0][1];
+        points[3][0] = points[0][0] + 4;
+        points[3][1] = points[0][1];
+      } else {
+        points[1][0] = tunnel_point[0][0];
+        points[1][1] = points[0][1];
+        points[2][0] = tunnel_point[0][0];
+        points[2][1] = points[0][1] + 4;
+        points[3][0] = points[0][0];
+        points[3][1] = points[0][1] + 4;
+      }
+    } else if (enter_angle == 2) {
+      points[0][0] = localization(lastx, tunnel_point[1][0]);
+      points[0][1] = localization(lasty, tunnel_point[1][1]);
+      if (orientation) {
+        points[1][0] = points[0][0];
+        points[1][1] = tunnel_point[1][1];
+        points[2][0] = points[0][0] - 4;
+        points[2][1] = tunnel_point[1][1];
+        points[3][0] = points[0][0] - 4;
+        points[3][1] = points[0][1];
+      } else {
+        points[1][0] = tunnel_point[1][0];
+        points[1][1] = points[0][1];
+        points[2][0] = tunnel_point[1][0];
+        points[2][1] = points[0][1] - 4;
+        points[3][0] = points[0][0];
+        points[3][1] = points[0][1] - 4;
+      }
+    } else {
+      System.out.println("Error");
+    }
+    return points;
+  }
+
+  private static double localization (int starting, double tunnel) {
+    do {
+      if (starting < tunnel) {
+        tunnel -= 0.5;
+      } else if (starting > tunnel) {
+        tunnel += 0.5;
+      }
+    } while (Math.abs(tunnel - Math.round(tunnel)) > 0.1);
+    return tunnel;
+  }
+  
+  private static void localizer (Navigation navigation, LightLocalizer lightlocalizer, Odometer odometer) {
+    sleep(50);
+    navigation.turnTo(0);
+    navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
+    lightlocalizer.correctAngle(); // when a line is detected, correct angle
+    navigation.back(0, BACK_DIST); // Go back the offset distance between the wheels and sensors
+    navigation.rotate(FULL_TURN / 4);
+    navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
+    lightlocalizer.correctAngle(); // when a line is detected, correct angle
+    navigation.back(0, BACK_DIST); // Go back the offset distance between the wheels and sensors
+    navigation.rotate(-FULL_TURN / 4);
+    odometer.position[2] = Math.toRadians(0);
+    sleep(50);
+  }
+  
+  private static void sleep (int time) {
+    try {
+      Thread.sleep(time);
+    } catch (Exception e) {
+    }
+  }
+  
 }

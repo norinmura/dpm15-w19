@@ -23,7 +23,7 @@ public class Navigation {
   /**
    * The run speed for the robot to travel through the tunnel
    */
-  public static final int RUN_SPEED = 170; // The run speed for the robot
+  public static final int RUN_SPEED = 220; // The run speed for the robot
   /**
    * The rotating speed of the robot
    */
@@ -31,7 +31,7 @@ public class Navigation {
   /**
    * The acceleration when the robot stops
    */
-  private static final int ACCELERATION = 3000; // The acceleration of the motor
+  private static final int ACCELERATION = 300; // The acceleration of the motor
   /**
    * The distance that the robot think there is an object in front of it
    */
@@ -39,7 +39,7 @@ public class Navigation {
   /**
    * The distance that the robot move to go closer to the can
    */
-  private static final double APPROACH_CAN = 4; // Get closer to the can
+  private static final double APPROACH_CAN = 5; // Get closer to the can
   /**
    * The length of the robot
    */
@@ -180,10 +180,6 @@ public class Navigation {
    */
   double[] distances = new double[3];
   /**
-   * The target can color
-   */
-  double target_color = -1;
-  /**
    * The angle that the roundSearch method should end
    */
   double end_angle = 0; // The angle left for rotate search
@@ -195,10 +191,6 @@ public class Navigation {
    * The after line correction, before next correction delay
    */
   int delay = 20; // The after line correction, before next correction delay
-  /**
-   * To determine whether to do the angle correction or not
-   */
-  boolean correction = true;
 
   /**
    * The constructor for the Navigation class
@@ -216,7 +208,7 @@ public class Navigation {
   public Navigation(Odometer odometer, EV3LargeRegulatedMotor leftMotor,
       EV3LargeRegulatedMotor rightMotor, EV3MediumRegulatedMotor sensorMotor,
       ColorClassification colorclassification, WeightCan weightcan, LineCorrection linecorrection,
-      double leftRadius, double rightRadius, double track, int target_color)
+      double leftRadius, double rightRadius, double track)
       throws OdometerExceptions {
     this.odometer = odometer;
     this.leftMotor = leftMotor;
@@ -228,7 +220,6 @@ public class Navigation {
     this.leftRadius = leftRadius;
     this.rightRadius = rightRadius;
     this.track = track;
-    this.target_color = target_color;
   }
 
   /**
@@ -294,42 +285,6 @@ public class Navigation {
    * angle when crossing a line
    * 
    * <p>
-   * This method cannot be break.
-   * 
-   * @param x - The x coordinate for the next point
-   * @param y - The y coordinate for the next point
-   * 
-   * @return - void method, no return
-   */
-  void runTo(double x, double y) {
-
-    /* Calculate move angle and distance */
-    lastx = odometer.getXYT()[0]; // The last x position of the robot
-    lasty = odometer.getXYT()[1]; // The last y position of the robot
-
-    travel = Math.sqrt(Math.pow(x - lastx, 2) + Math.pow(y - lasty, 2)); // The travel distance
-    angle = Math.atan2(x - lastx, y - lasty) * 180 / Math.PI; // The angle that the robot should
-                                                              // rotate to
-
-    turnTo(angle); // Call the turnTo method
-
-    leftMotor.setSpeed(RUN_SPEED);
-    rightMotor.setSpeed(RUN_SPEED);
-    // Travel the robot to the destination point
-    leftMotor.rotate(convertDistance(leftRadius, travel), true);
-    rightMotor.rotate(convertDistance(rightRadius, travel), false);
-
-  }
-
-  /**
-   * <p>
-   * This method causes the robot to travel to the absolute field location (x, y), specified in tile
-   * points. This method should continuously call turnTo(double theta) and then set the motor speed
-   * to forward(straight). This will make sure that your heading is updated until you reach your
-   * exact goal. This method will poll the odometer for information. The robot will correct its
-   * angle when crossing a line
-   * 
-   * <p>
    * This method cannot be break. Correcting angle, used for the robot to travel between the
    * starting zone and the island.
    * 
@@ -350,21 +305,14 @@ public class Navigation {
 
     turnTo(angle); // Call the turnTo method
 
-    leftMotor.setSpeed(FORWARD_SPEED);
-    rightMotor.setSpeed(FORWARD_SPEED);
+    leftMotor.setAcceleration(ACCELERATION);
+    rightMotor.setAcceleration(ACCELERATION);
+    leftMotor.setSpeed(RUN_SPEED);
+    rightMotor.setSpeed(RUN_SPEED);
     // Travel the robot to the destination point
     leftMotor.rotate(convertDistance(leftRadius, travel), true);
-    rightMotor.rotate(convertDistance(rightRadius, travel), true);
-
-    while (leftMotor.isMoving() || rightMotor.isMoving()) {
-      correctAngle(x, y, 2); // The third variable is to indicate which method is calling
-                             // correctAngle
-      try {
-        Thread.sleep(50);
-      } catch (Exception e) {
-      }
-    }
-
+    rightMotor.rotate(convertDistance(rightRadius, travel), false);
+    
   }
 
   /**
@@ -412,8 +360,6 @@ public class Navigation {
     if (warning < SCAN_DISTANCE) {
       Sound.beepSequenceUp();
 
-      leftMotor.setAcceleration(ACCELERATION);
-      rightMotor.setAcceleration(ACCELERATION);
       leftMotor.stop(true);
       rightMotor.stop(false);
 
@@ -440,15 +386,7 @@ public class Navigation {
       sensorMotor.setSpeed(ROTATE_SPEED); // set the scanning speed
       sensorMotor.rotate(FULL_TURN, true); // The sensor motor will rotate less than 180
                                            // degree (as we are using a gear)
-      if (colorclassification.color == target_color) {
-        for (int i = 0; i < 10; i++) {
-          Sound.beep();
-          try {
-            Thread.sleep(50);
-          } catch (Exception e) {
-          }
-        }
-      }
+      
       get_can = true; // The robot is getting a can
     }
   }
@@ -472,9 +410,7 @@ public class Navigation {
    * @param method - The type of the map point (pre-defined in the SearchCan class)
    */
   void correctAngle(double x, double y, int method) {
-    if (!correction) {
-      return;
-    }
+    
     /* INITIALIZE VARIABLES */
     boolean key = true;
     while (key) {
@@ -638,7 +574,7 @@ public class Navigation {
 
     while (leftMotor.isMoving() || rightMotor.isMoving()) {
       round_detect = colorclassification.median_filter();
-      if (angles[0] == 0 && round_detect <= TILE_SIZE) {
+      if (angles[0] == 0 && round_detect <= 2 * TILE_SIZE) {
         angles[0] = odometer.getXYT()[2];
         distances[0] = round_detect;
       }
