@@ -308,11 +308,24 @@ public class Navigation {
 
     turnTo(angle); // Call the turnTo method
 
-    leftMotor.setSpeed(RUN_SPEED);
+    leftMotor.setSpeed(RUN_SPEED - 1);
     rightMotor.setSpeed(RUN_SPEED);
     // Travel the robot to the destination point
     leftMotor.rotate(convertDistance(leftRadius, travel), true);
     rightMotor.rotate(convertDistance(rightRadius, travel), false);
+    
+    while (leftMotor.isMoving() || rightMotor.isMoving()) {
+      if (!leftMotor.isMoving() || !rightMotor.isMoving()) {
+        leftMotor.stop(true);
+        rightMotor.stop(false);
+        odometer.position[2] = Math.toRadians(angle);
+        odometer.setXYT(x, y, angle);
+      }
+      try {
+        Thread.sleep(50);
+      } catch (Exception e) {
+      }
+    }
 
   }
 
@@ -345,13 +358,19 @@ public class Navigation {
 
     turnTo(angle); // Call the turnTo method
 
-    leftMotor.setSpeed(FORWARD_SPEED);
+    leftMotor.setSpeed(FORWARD_SPEED - 1);
     rightMotor.setSpeed(FORWARD_SPEED);
     // Travel the robot to the destination point
     leftMotor.rotate(convertDistance(leftRadius, travel), true);
     rightMotor.rotate(convertDistance(rightRadius, travel), true);
 
     while (leftMotor.isMoving() || rightMotor.isMoving()) {
+      if (!leftMotor.isMoving() || !rightMotor.isMoving()) {
+        leftMotor.stop(true);
+        rightMotor.stop(false);
+        odometer.position[2] = Math.toRadians(angle);
+        odometer.setXYT(x, y, angle);
+      }
       correctAngle(x, y, 2); // The third variable is to indicate which method is calling
                              // correctAngle
       try {
