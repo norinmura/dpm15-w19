@@ -27,47 +27,48 @@ import lejos.robotics.SampleProvider;
  * radius and track width).
  * 
  * <p>
- * For this version, the robot will start at a known corner 0 (the lower left corner of the board,
- * (0, 0) coordinate). The Wi-Fi connection that connects the robot with the server using Wi-Fi,
- * will obtain data from the server. The Wi-Fi connection is implemented by importing and building
- * path to a helper class. Using the if/else statement, the robot will only store the useful data
- * and exit the program if there is error in the server input or Wi-Fi connection. After obtaining
- * all the essential parameters, it will start to initialize all the sensors (two color sensor to
- * RED mode, one color sensor to RGB mode and the ultrasonic sensor to distance mode), and create
- * the instances for the program (odometer, display, weight can, line correction, navigation,
- * ultrasoinc localizer and light localizer). The x, y, theta coordinate of the robot is: x -
- * horizontal axis, y - vertical axis, theta - clockwise angle, (0, 0, 0) as the lower left corner
- * of the board and facing towards positive y. The Odometer class keep track of the position (x, y,
- * and theta) of the robot, with x, y and theta initialized according to the result of the
- * localization and the starting corner. The Display class will display the x, y and theta value on
- * the LCD screen of the robot. The ColorClassification class will detect the color of the can
- * (fetching R, G, B sample using the RGB mode) and identify the color (comparing the reading with
- * the standardized default value of each color, i.e., blue, green, yellow and red); the color
- * sensor carried by the arm (rotates 180 degrees), so the color sensor will keep detecting the
- * color while the arm is moving, and finally return the color that is detected most. The WeightCan
- * class contains the control of the claw of the robot, including the lifting and dropping can, and
- * weight detection. The LineCorrection class contains two differential filter method for the two
- * color sensor in RED mode for line detection. The Navigation class contains the control of the
- * motion of the robot (turning, traveling and angle correction), it will also call
+ * For this version, the robot will start at an unknown corner 0, 1, 2, or 3 (the lower left corner
+ * of the board is the (0, 0) coordinate). The Wi-Fi connection that connects the robot with the
+ * server using Wi-Fi, will obtain data from the server. The Wi-Fi connection is implemented by
+ * importing and building path to a helper class. Using the if/else statement, the robot will only
+ * store the useful data and exit the program if there is error in the server input or Wi-Fi
+ * connection. After obtaining all the essential parameters, it will start to initialize all the
+ * sensors (two color sensor to RED mode, one color sensor to RGB mode and the ultrasonic sensor to
+ * distance mode), and create the instances for the program (odometer, display, weight can, line
+ * correction, navigation, ultrasoinc localizer and light localizer). The x, y, theta coordinate of
+ * the robot is: x - horizontal axis, y - vertical axis, theta - clockwise angle, (0, 0, 0) as the
+ * lower left corner of the board and facing towards positive y. The Odometer class keep track of
+ * the position (x, y, and theta) of the robot, with x, y and theta initialized according to the
+ * result of the localization and the starting corner. The ColorClassification class will detect the
+ * color of the can (fetching R, G, B sample using the RGB mode) and identify the color (comparing
+ * the reading with the standardized default value of each color, i.e., blue, green, yellow and
+ * red); the color sensor carried by the arm (rotates 180 degrees), so the color sensor will keep
+ * detecting the color while the arm is moving, and finally return the color that is detected most.
+ * The WeightCan class contains the control of the claw of the robot, including the lifting and
+ * dropping can, and weight detection. The LineCorrection class contains two differential filter
+ * method for the two color sensor in RED mode for line detection. The Navigation class contains the
+ * control of the motion of the robot (turning, traveling and angle correction), it will also call
  * ColorClassification and WeightCan class and run them in threads. The UltrasonicLocalizer class is
  * able to localize the orientation (angle) of the robot and the LightLocalizer class will localize
  * the localization and the orientation (angle) of the robot, and reset the coordinates according to
  * the starting corner.
  * 
  * <p>
- * After initialing all the instances, the main method will start the thread for odometer, display,
- * and ultrasonic localizer at the same time. After the termination of the ultrasonic localizer, the
+ * After initialing all the instances, the main method will start the thread for odometer, and
+ * ultrasonic localizer at the same time. After the termination of the ultrasonic localizer, the
  * light localizer thread will be created and start. Finally, after the termination of the light
  * localization, the robot will beep to indicate the user that the robot is well localized and ready
  * to run.
  * 
  * <p>
- * After localizing to the grid, the main method will generate a S-shape search map, then navigate
- * the robot to travel through the tunnel, arrive at the lower left corner of the search region, and
- * perform a search in the prescribed area for a can of specified color (search path is following
- * the generated map). The robot will arrive at each map point, turn to find the cans around it, go
- * approach the can, detect the can and identify its color, and beeps if the target color is found.
- * Before termination, the robot will be navigated to the upper right corner of the search region.
+ * After localizing to the grid, the main method will generate a path to travel through the tunnel,
+ * containing the point of before and after tunnel localization point. After that, it will generate
+ * a S-shape search map, then navigate the robot to travel through the tunnel, arrive at the lower
+ * left corner of the search region, and perform a search in the prescribed area for a can of
+ * specified color (search path is following the generated map). The robot will arrive at each map
+ * point, turn to find the cans around it, go approach the can, detect the can and identify its
+ * color, and beeps if the target color is found. Before termination, the robot will be navigated to
+ * the upper right corner of the search region.
  * 
  * @author Floria Peng
  */
@@ -132,11 +133,6 @@ public class FinalProject {
    */
   private static final Port colorPort = LocalEV3.get().getPort("S4"); // Light sensor port for color
                                                                       // detection
-  /**
-   * The LCD display
-   */
-  private static final TextLCD lcd = LocalEV3.get().getTextLCD(); // The LCD display
-
   /**
    * The radius of the wheels
    */
@@ -350,6 +346,10 @@ public class FinalProject {
 
     Sound.beep();
     
+    Thread weightThread = new Thread(weightcan);
+    weightThread.start();
+    weightThread.join();
+    
     double[][] tunnel_points = getPoints(corner, tn_ll_x, tn_ll_y, tn_ur_x, tn_ur_y);
     navigation.travelTo(tunnel_points[0][0] * TILE_SIZE, tunnel_points[0][1] * TILE_SIZE);
     localizer(navigation, lightlocalizer, odometer);
@@ -361,6 +361,8 @@ public class FinalProject {
     localizer(navigation, lightlocalizer, odometer);
     odometer.setXYT(tunnel_points[0][0] * TILE_SIZE, tunnel_points[0][1] * TILE_SIZE, 0);
     sleep(50);
+    
+    navigation.travelTo(sz_ll_x * TILE_SIZE, sz_ll_y * TILE_SIZE);
 
     /* Generating the search map */
     /*int[] upperRight = {sz_ur_x, sz_ur_y};
@@ -410,6 +412,18 @@ public class FinalProject {
     System.exit(0);
   }
 
+  /**
+   * This method will generate the path that the robot will follow to travel through the tunnel. It
+   * will use the starting corner and the position of the tunnel to generate a proper path,
+   * considering different cases: the tunnel is next to the wall, or next to the river.
+   * 
+   * @param corner - The starting corner
+   * @param tn_ll_x - The x position of the lower left corner of the tunnel
+   * @param tn_ll_y - The y position of the lower left corner of the tunnel
+   * @param tn_ur_x - The x position of the upper right corner of the tunnel
+   * @param tn_ur_y - The y position of the upper right corner of the tunnel
+   * @return - The points map generated
+   */
   private static double[][] getPoints(int corner, int tn_ll_x, int tn_ll_y, int tn_ur_x,
       int tn_ur_y) {
     boolean orientation = (tn_ur_x - tn_ll_x) > (tn_ur_y - tn_ll_y); // true if the tunnel is placed
@@ -501,6 +515,15 @@ public class FinalProject {
     return points;
   }
 
+  /**
+   * This method will calculate the x or y position of before/after tunnel light localization. The
+   * input of this method is the starting corner, and one value indicating the entrance of the
+   * tunnel.
+   * 
+   * @param starting - The x or y position of the starting corner
+   * @param tunnel - The x or y position of the middle point of the tunnel entrance
+   * @return the x or y value of the before/after tunnel localization point
+   */
   private static double localization (int starting, double tunnel) {
     do {
       if (starting < tunnel) {
@@ -512,6 +535,13 @@ public class FinalProject {
     return tunnel;
   }
   
+  /**
+   * This method implements the light localization before and after tunnel.
+   * 
+   * @param navigation - The instance of the navigation class
+   * @param lightlocalizer - The instance of the lightlocalizer class
+   * @param odometer - The instance of the odometer class
+   */
   private static void localizer (Navigation navigation, LightLocalizer lightlocalizer, Odometer odometer) {
     sleep(50);
     navigation.turnTo(0);
@@ -527,6 +557,11 @@ public class FinalProject {
     sleep(50);
   }
   
+  /**
+   * This method implements the sleep of this thread.
+   * 
+   * @param time - The sleeping time
+   */
   private static void sleep (int time) {
     try {
       Thread.sleep(time);
