@@ -1,5 +1,6 @@
 package ca.mcgill.ecse211.finalproject;
 
+import lejos.hardware.Sound;
 import lejos.hardware.motor.UnregulatedMotor;
 
 /**
@@ -35,16 +36,12 @@ public class WeightCan implements Runnable {
   /**
    * Time to wait before we request the ultrasonic sensor
    */
-  private static final int WAIT_TIME = 1000; 
+  private static final int WAIT_TIME = 500; 
   // to say whether or not it still detects a can.
   /**
    * Threshold value read by ultrasonic sensor to check whether the can was lifted
    */
-  private static final int NEAR_SENSOR = 5; 
-  /**
-   * Distance that determines out of bound
-   */
-  private static final int OUT_OF_BOUND = 20000;
+  private static final int NEAR_SENSOR = 32; 
   /**
    * Time out for claw to move
    */
@@ -86,13 +83,22 @@ public class WeightCan implements Runnable {
     }
     // If the can is heavy, then if shouldn't have moved more than NEAR_SENSOR from and should have
     // move less than OUT_OF_BOUND.
-    if (colorclassification.median_filter() < NEAR_SENSOR
-        || colorclassification.median_filter() > OUT_OF_BOUND) {
-      heavy = true;
-      claw_open();
-      claw_close(MAX_POWER);
-    } else {
-      heavy = false;
+    while (true) {
+      if (Math.abs(colorclassification.median_filter() - NEAR_SENSOR) < 5) {
+        heavy = true;
+        Sound.beepSequenceUp();
+        claw_open();
+        try {
+          Thread.sleep(WAIT_TIME);
+        } catch (Exception e) {
+        }
+        claw_close(MAX_POWER);
+        break;
+      } else if (colorclassification.median_filter() > 5) {
+        heavy = false;
+        Sound.beepSequence();
+        break;
+      }
     }
   }
 
