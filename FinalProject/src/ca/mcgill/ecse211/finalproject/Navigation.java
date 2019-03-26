@@ -29,10 +29,6 @@ public class Navigation {
    */
   public static final int ROTATE_SPEED = 140; // The rotation speed for the robot
   /**
-   * The acceleration when the robot stops
-   */
-  private static final int ACCELERATION = 300; // The acceleration of the motor
-  /**
    * The distance that the robot think there is an object in front of it
    */
   private static final double SCAN_DISTANCE = 7; // The detect a can distance
@@ -198,6 +194,18 @@ public class Navigation {
    * The beeping time
    */
   int sound_time = 0;
+  /**
+   * The can score
+   */
+  int score = 0;
+  /**
+   * Whether to go back to starting corner
+   */
+  boolean go_back = false;
+  /**
+   * How many can is detected
+   */
+  int count_can = 0;
 
   /**
    * The constructor for the Navigation class
@@ -312,8 +320,6 @@ public class Navigation {
 
     turnTo(angle); // Call the turnTo method
 
-    leftMotor.setAcceleration(ACCELERATION);
-    rightMotor.setAcceleration(ACCELERATION);
     leftMotor.setSpeed(RUN_SPEED);
     rightMotor.setSpeed(RUN_SPEED);
     // Travel the robot to the destination point
@@ -362,6 +368,7 @@ public class Navigation {
   void detectCan() {
     /* INITIALIZE VARIABLES */
     get_can = false;
+    score = 0;
 
     warning = colorclassification.median_filter();
     if (warning < SCAN_DISTANCE) {
@@ -396,6 +403,7 @@ public class Navigation {
       if (colorclassification.color == 5) {
         return; // TODO
       }
+      score = colorclassification.color;
 
       Thread weightThread = new Thread(weightcan); // set a new thread to weight the can
       weightThread.start(); // the weighting thread starts
@@ -406,6 +414,7 @@ public class Navigation {
       }
 
       if (weightcan.heavy) {
+        score *= 2;
         sound_time = 1000; // 1000 ms
       } else {
         sound_time = 500; // 500 ms
@@ -432,6 +441,7 @@ public class Navigation {
           Sound.playTone(TUNE, sound_time);
           break;
       }
+      count_can++;
       get_can = true; // The robot is getting a can
     }
   }
@@ -595,11 +605,12 @@ public class Navigation {
    * degrees) until it sees a can, and then it calls the goTo(s, y) method to approach and detect
    * the can.
    * 
-   * @param x - The x distance the robot should move
-   * @param y - The y distance the robot should move
+   * @param x - The x coordinate of the robot when it is doing round search
+   * @param y - The y coordinate of the robot when it is doing round search
    * @param angle - The turning angle
+   * @param range - The searching range, 1 for 1 tile
    */
-  void roundSearch(double x, double y, double angle) {
+  void roundSearch(double x, double y, double angle, int range) {
     round_detect = 0;
     angles[0] = angles[1] = angles[2] = 0;
     distances[0] = distances[1] = distances[2] = 0;
@@ -614,7 +625,7 @@ public class Navigation {
 
     while (leftMotor.isMoving() || rightMotor.isMoving()) {
       round_detect = colorclassification.median_filter();
-      if (angles[0] == 0 && round_detect <= 1 * TILE_SIZE) {
+      if (angles[0] == 0 && round_detect <= range * TILE_SIZE) {
         angles[0] = odometer.getXYT()[2];
         System.out.println("angles[0] = " + angles[0]);
         distances[0] = round_detect;
@@ -641,19 +652,21 @@ public class Navigation {
         distances[2] = (distances[0] + distances[1]) / 2;
         turnTo(angles[2]); // Turn towards the can
         goTo(distances[2] * 1.5); // Go towards the can
-        if (get_can) { // If this is a can, returned in detectCan
-          weightcan.claw_close(MAX_POWER); // power 35
-        }
         backTo(x, y);
+        // TODO
+        if (score > 3 || count_can == 5) {
+          go_back = true;
+          return;
+        }
         if (get_can) { // If this is a can
           rotate(FULL_TURN / 2);
           forward(TILE_SIZE / 3, 0);
           weightcan.claw_open();
           back(TILE_SIZE / 3, 0);
           rotate(FULL_TURN / 2);
-          roundSearch(x, y, end_angle - odometer.getXYT()[2]);
+          roundSearch(x, y, end_angle - odometer.getXYT()[2], range);
         } else {
-          roundSearch(x, y, end_angle - odometer.getXYT()[2]);
+          roundSearch(x, y, end_angle - odometer.getXYT()[2], range);
         }
       }
     }

@@ -362,10 +362,94 @@ public class FinalProject {
     odometer.setXYT(tunnel_points[0][0] * TILE_SIZE, tunnel_points[0][1] * TILE_SIZE, 0);
     sleep(50);
     
-    /* Arrive at lower left corner of the search zone */
+    /* Searching */
+    /* Generating the search map */
+    int[] upperRight = {sz_ur_x, sz_ur_y};
+    int[] lowerLeft = {sz_ll_x, sz_ll_y};
+    int horizontal = upperRight[0] - lowerLeft[0] + 1; // The x nodes that will be traveled
+    int vertical = upperRight[1] - lowerLeft[1] + 1; // The y nodes that will be traveled
+
+    int[][] fullPath = new int[horizontal * vertical][3]; // Set up a 2D array of map
+    int direction = 1; // Traveling to the right
+    for (int i = 0; i < vertical; i++) {
+      for (int j = 0; j < horizontal; j++) {
+        if (direction == 1) { // Map generation
+          fullPath[i * horizontal + j][0] = lowerLeft[0] + j;
+          fullPath[i * horizontal + j][1] = lowerLeft[1] + i;
+        } else {
+          fullPath[i * horizontal + j][0] = upperRight[0] - j;
+          fullPath[i * horizontal + j][1] = lowerLeft[1] + i;
+        }
+      }
+      direction *= -1; // Traveling to the left
+    }
+    for (int i = 0; i < fullPath.length; i++) {
+      if (i % (2 * horizontal) == horizontal - 1) {
+        // right lower side can
+        fullPath[i][2] = 0;
+      } else if (i % (2 * horizontal) == horizontal) {
+        // right upper side can
+        fullPath[i][2] = 1;
+      } else if (i % (2 * horizontal) == 2 * horizontal - 1) {
+        // left lower side can
+        fullPath[i][2] = 2;
+      } else if (i % (2 * horizontal) == 0) {
+        // left upper side can
+        fullPath[i][2] = 3;
+      } else { // straight line can
+        fullPath[i][2] = 4;
+      }
+    }
+
+    /* Traverse the search map and navigate */
+    // Traveling to island and iterating the map
+    int i = 0;
     navigation.travelTo(sz_ll_x * TILE_SIZE, sz_ll_y * TILE_SIZE); // First map point
     localizer(90, navigation, lightlocalizer, odometer);
     odometer.setXYT(sz_ll_x * TILE_SIZE, sz_ll_y * TILE_SIZE, 90);
+    i++;
+    
+    while (i < fullPath.length && (System.currentTimeMillis() - timeStart) < TIME_OUT) {
+      navigation.moveTo(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE);
+      if (fullPath[i][2] == 4) { // straight line point
+        if (odometer.getXYT()[2] < 180) {
+          navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE,
+              -FULL_TURN / 4, 1);
+        } else {
+          navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE,
+              FULL_TURN / 4, 1);
+        }
+      } else if (fullPath[i][2] == 1) { // right upper point
+        navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE,
+            -FULL_TURN / 4, 1);
+      } else if (fullPath[i][2] == 3) {
+        navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE,
+            FULL_TURN / 4, 1);
+      } else if (fullPath[i][2] == 0) { // right localize
+        localizer(0, navigation, lightlocalizer, odometer);
+        odometer.setXYT(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE, 0);
+        sleep(50);
+      } else if (fullPath[i][2] == 2) { // left localize
+        localizer(0, navigation, lightlocalizer, odometer);
+        odometer.setXYT(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE, 0);
+        sleep(50);
+      }
+      if (navigation.go_back) {
+        break;
+      }
+      i++;
+    }
+    
+    localizer(0, navigation, lightlocalizer, odometer);
+    odometer.setXYT(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE, 0);
+    sleep(50);
+    navigation.travelTo(tunnel_points[3][0] * TILE_SIZE, tunnel_points[3][1] * TILE_SIZE);
+    localizer(0, navigation, lightlocalizer, odometer);
+    odometer.setXYT(tunnel_points[0][0] * TILE_SIZE, tunnel_points[0][1] * TILE_SIZE, 0);
+    sleep(50);
+    navigation.travelTo(tunnel_points[2][0] * TILE_SIZE, tunnel_points[2][1] * TILE_SIZE);
+    navigation.travelTo(tunnel_points[1][0] * TILE_SIZE, tunnel_points[1][1] * TILE_SIZE);
+    weightcan.claw_open();
     
     /* Waiting for exit */
     // Wait here forever until button pressed to terminate the robot
