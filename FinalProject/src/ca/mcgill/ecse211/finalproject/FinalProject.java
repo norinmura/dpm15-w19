@@ -80,7 +80,7 @@ public class FinalProject {
    * The IP address of the server
    */
 
-  private static final String SERVER_IP = "192.168.2.11";
+  private static final String SERVER_IP = "192.168.2.5";
 
   /**
    * The team number of the user
@@ -344,67 +344,28 @@ public class FinalProject {
     lightThread.start();
     lightThread.join();
 
-    Sound.beep();
+    for (int i = 0; i < 3; i++) {
+      Sound.beep();
+      sleep(50);
+    }
     
-    Thread weightThread = new Thread(weightcan);
-    weightThread.start();
-    weightThread.join();
-    
+    /* Travel through tunnel */
     double[][] tunnel_points = getPoints(corner, tn_ll_x, tn_ll_y, tn_ur_x, tn_ur_y);
     navigation.travelTo(tunnel_points[0][0] * TILE_SIZE, tunnel_points[0][1] * TILE_SIZE);
-    localizer(navigation, lightlocalizer, odometer);
+    localizer(0, navigation, lightlocalizer, odometer);
     odometer.setXYT(tunnel_points[0][0] * TILE_SIZE, tunnel_points[0][1] * TILE_SIZE, 0);
     sleep(50);
     navigation.travelTo(tunnel_points[1][0] * TILE_SIZE, tunnel_points[1][1] * TILE_SIZE);
     navigation.travelTo(tunnel_points[2][0] * TILE_SIZE, tunnel_points[2][1] * TILE_SIZE);
     navigation.travelTo(tunnel_points[3][0] * TILE_SIZE, tunnel_points[3][1] * TILE_SIZE);
-    localizer(navigation, lightlocalizer, odometer);
+    localizer(0, navigation, lightlocalizer, odometer);
     odometer.setXYT(tunnel_points[0][0] * TILE_SIZE, tunnel_points[0][1] * TILE_SIZE, 0);
     sleep(50);
     
-    navigation.travelTo(sz_ll_x * TILE_SIZE, sz_ll_y * TILE_SIZE);
-
-    /* Generating the search map */
-    /*int[] upperRight = {sz_ur_x, sz_ur_y};
-    int[] lowerLeft = {sz_ll_x, sz_ll_y};
-    int horizontal = upperRight[0] - lowerLeft[0] + 1; // The x nodes that will be traveled
-    int vertical = upperRight[1] - lowerLeft[1] + 1; // The y nodes that will be traveled
-
-    int[][] fullPath = new int[horizontal * vertical][3]; // Set up a 2D array of map
-    int direction = 1; // Traveling to the right
-    for (int i = 0; i < vertical; i++) {
-      for (int j = 0; j < horizontal; j++) {
-        if (direction == 1) { // Map generation
-          fullPath[i * horizontal + j][0] = lowerLeft[0] + j;
-          fullPath[i * horizontal + j][1] = lowerLeft[1] + i;
-        } else {
-          fullPath[i * horizontal + j][0] = upperRight[0] - j;
-          fullPath[i * horizontal + j][1] = lowerLeft[1] + i;
-        }
-      }
-      direction *= -1; // Traveling to the left
-    }
-    for (int i = 0; i < fullPath.length; i++) {
-      if (i % (2 * horizontal) == horizontal - 1) {
-        // right lower side can
-        fullPath[i][2] = 0;
-      } else if (i % (2 * horizontal) == horizontal) {
-        // right upper side can
-        fullPath[i][2] = 1;
-      } else if (i % (2 * horizontal) == 2 * horizontal - 1) {
-        // left lower side can
-        fullPath[i][2] = 2;
-      } else if (i % (2 * horizontal) == 0) {
-        // left upper side can
-        fullPath[i][2] = 3;
-      } else { // straight line can
-        fullPath[i][2] = 4;
-      }
-    }*/
-
-    /* Traverse the search map and navigate */
-    // Traveling to island and iterating the map
-    
+    /* Arrive at lower left corner of the search zone */
+    navigation.travelTo(sz_ll_x * TILE_SIZE, sz_ll_y * TILE_SIZE); // First map point
+    localizer(90, navigation, lightlocalizer, odometer);
+    odometer.setXYT(sz_ll_x * TILE_SIZE, sz_ll_y * TILE_SIZE, 90);
     
     /* Waiting for exit */
     // Wait here forever until button pressed to terminate the robot
@@ -424,6 +385,7 @@ public class FinalProject {
    * @param tn_ur_y - The y position of the upper right corner of the tunnel
    * @return - The points map generated
    */
+  @SuppressWarnings("unused")
   private static double[][] getPoints(int corner, int tn_ll_x, int tn_ll_y, int tn_ur_x,
       int tn_ur_y) {
     boolean orientation = (tn_ur_x - tn_ll_x) > (tn_ur_y - tn_ll_y); // true if the tunnel is placed
@@ -542,9 +504,10 @@ public class FinalProject {
    * @param lightlocalizer - The instance of the lightlocalizer class
    * @param odometer - The instance of the odometer class
    */
-  private static void localizer (Navigation navigation, LightLocalizer lightlocalizer, Odometer odometer) {
+  @SuppressWarnings("unused")
+  private static void localizer (double angle, Navigation navigation, LightLocalizer lightlocalizer, Odometer odometer) {
     sleep(50);
-    navigation.turnTo(0);
+    navigation.turnTo(angle);
     navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
     lightlocalizer.correctAngle(); // when a line is detected, correct angle
     navigation.back(0, BACK_DIST); // Go back the offset distance between the wheels and sensors
@@ -553,7 +516,7 @@ public class FinalProject {
     lightlocalizer.correctAngle(); // when a line is detected, correct angle
     navigation.back(0, BACK_DIST); // Go back the offset distance between the wheels and sensors
     navigation.rotate(-FULL_TURN / 4);
-    odometer.position[2] = Math.toRadians(0);
+    odometer.position[2] = Math.toRadians(angle);
     sleep(50);
   }
   

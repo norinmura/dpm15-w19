@@ -28,7 +28,7 @@ public class WeightCan implements Runnable {
   /**
    * The power to lift a light can but not the heavy can
    */
-  private static final int MIN_POWER = 20; 
+  private static final int MIN_POWER = 15; 
   /**
    * The power needed to lift a heavy can
    */
@@ -39,13 +39,13 @@ public class WeightCan implements Runnable {
   private static final int WAIT_TIME = 500; 
   // to say whether or not it still detects a can.
   /**
-   * Threshold value read by ultrasonic sensor to check whether the can was lifted
-   */
-  private static final int NEAR_SENSOR = 32; 
-  /**
    * Time out for claw to move
    */
   private static final int TIMER = 60;
+  /**
+   * The comparison interval
+   */
+  private static final int INTERVAL = 80;
 
   /* Fields */
   /**
@@ -81,12 +81,9 @@ public class WeightCan implements Runnable {
       Thread.sleep(WAIT_TIME);
     } catch (Exception e) {
     }
-    // If the can is heavy, then if shouldn't have moved more than NEAR_SENSOR from and should have
-    // move less than OUT_OF_BOUND.
     while (true) {
-      if (Math.abs(colorclassification.median_filter() - NEAR_SENSOR) < 5) {
+      if (weightMotor.getTachoCount() < INTERVAL) {
         heavy = true;
-        Sound.beepSequenceUp();
         claw_open();
         try {
           Thread.sleep(WAIT_TIME);
@@ -94,9 +91,8 @@ public class WeightCan implements Runnable {
         }
         claw_close(MAX_POWER);
         break;
-      } else if (colorclassification.median_filter() > 5) {
+      } else {
         heavy = false;
-        Sound.beepSequence();
         break;
       }
     }
