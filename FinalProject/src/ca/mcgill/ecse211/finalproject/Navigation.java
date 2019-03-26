@@ -45,6 +45,10 @@ public class Navigation {
    */
   private static final double ROBOT_LENGTH = 10; // The length of the robot
   /**
+   * The sound frequency
+   */
+  private static final int TUNE = 880;
+  /**
    * The angle of a full turn is 360 degrees
    */
   public static final int FULL_TURN = 360; // 360 degree for a circle
@@ -117,7 +121,6 @@ public class Navigation {
    */
   double track; // The track of the robot (by measuring the distance between the center of both
                 // wheel)
-
   /**
    * The current x position before the robot moves
    */
@@ -191,6 +194,10 @@ public class Navigation {
    * The after line correction, before next correction delay
    */
   int delay = 20; // The after line correction, before next correction delay
+  /**
+   * The beeping time
+   */
+  int sound_time = 0;
 
   /**
    * The constructor for the Navigation class
@@ -256,7 +263,7 @@ public class Navigation {
     rightMotor.rotate(convertDistance(rightRadius, travel), true);
 
     while (leftMotor.isMoving() || rightMotor.isMoving()) { // If the robot is moving
-      correctAngle(x, y, 1); // The third variable is to indicate which method is calling
+      correctAngle(x, y); // The third variable is to indicate which method is calling
                              // correctAngle
       detectCan();
       if (get_can) {
@@ -386,7 +393,45 @@ public class Navigation {
       sensorMotor.setSpeed(ROTATE_SPEED); // set the scanning speed
       sensorMotor.rotate(FULL_TURN, true); // The sensor motor will rotate less than 180
                                            // degree (as we are using a gear)
-      
+      if (colorclassification.color == 5) {
+        return; // TODO
+      }
+
+      Thread weightThread = new Thread(weightcan); // set a new thread to weight the can
+      weightThread.start(); // the weighting thread starts
+      try {
+        weightThread.join(); // wait for the weighting process to finish
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+
+      if (weightcan.heavy) {
+        sound_time = 1000; // 1000 ms
+      } else {
+        sound_time = 500; // 500 ms
+      }
+
+      // TODO
+      switch (colorclassification.color) {
+        case 1: // blue
+          Sound.playTone(TUNE, sound_time);
+          break;
+        case 2: // green
+          Sound.playTone(TUNE, sound_time);
+          Sound.playTone(TUNE, sound_time);
+          break;
+        case 3: // yellow
+          Sound.playTone(TUNE, sound_time);
+          Sound.playTone(TUNE, sound_time);
+          Sound.playTone(TUNE, sound_time);
+          break;
+        case 4: // red
+          Sound.playTone(TUNE, sound_time);
+          Sound.playTone(TUNE, sound_time);
+          Sound.playTone(TUNE, sound_time);
+          Sound.playTone(TUNE, sound_time);
+          break;
+      }
       get_can = true; // The robot is getting a can
     }
   }
@@ -409,7 +454,7 @@ public class Navigation {
    * @param y - The y point that will be going to.
    * @param method - The type of the map point (pre-defined in the SearchCan class)
    */
-  void correctAngle(double x, double y, int method) {
+  void correctAngle(double x, double y) {
     
     /* INITIALIZE VARIABLES */
     boolean key = true;
@@ -452,13 +497,8 @@ public class Navigation {
           odometer.setTheta(270);
           odometer.position[2] = Math.toRadians(270);
         }
-        if (method == 1) {
-          delay = 0;
-          moveTo(x, y);
-        } else if (method == 2) {
-          delay = 0;
-          travelTo(x, y);
-        }
+        delay = 0;
+        moveTo(x, y);
       }
     }
   }
@@ -574,16 +614,23 @@ public class Navigation {
 
     while (leftMotor.isMoving() || rightMotor.isMoving()) {
       round_detect = colorclassification.median_filter();
-      if (angles[0] == 0 && round_detect <= 2 * TILE_SIZE) {
+      if (angles[0] == 0 && round_detect <= 1 * TILE_SIZE) {
         angles[0] = odometer.getXYT()[2];
+        System.out.println("angles[0] = " + angles[0]);
         distances[0] = round_detect;
       }
       if (angles[0] != 0 && round_detect > distances[0]) {
         angles[1] = odometer.getXYT()[2];
+        System.out.println("angles[1] = " + angles[1]);
         distances[1] = round_detect;
       }
 
       if (angles[0] != 0 && angles[1] != 0) {
+        if ((angles[1] - angles[0] < 10) || (angles[1] - angles[0] < -350)) {
+          angles[0] = angles[1] = 0;
+          distances[0] = distances[1] = 0;
+          continue;
+        }
         // Stop the motors and calculate the angle and distance of the can
         leftMotor.stop(true);
         rightMotor.stop(false);
