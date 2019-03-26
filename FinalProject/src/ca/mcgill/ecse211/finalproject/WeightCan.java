@@ -1,6 +1,5 @@
 package ca.mcgill.ecse211.finalproject;
 
-import lejos.hardware.Sound;
 import lejos.hardware.motor.UnregulatedMotor;
 
 /**
@@ -10,16 +9,17 @@ import lejos.hardware.motor.UnregulatedMotor;
  * @author Floria Peng
  */
 public class WeightCan implements Runnable {
-  
+
   /* Private Fields */
   /**
    * Field from UnregulatedMotor to have access to the setPowerMethod form Basic Motor
    */
-  private UnregulatedMotor weightMotor; 
+  private UnregulatedMotor weightMotor;
   /**
-   * Field from ColorClassification used to call the method that gets the reading from Ultrasonic Sensor
+   * Field from ColorClassification used to call the method that gets the reading from Ultrasonic
+   * Sensor
    */
-  private ColorClassification colorclassification; 
+  private ColorClassification colorclassification;
   /* Constants */
   /**
    * Angle to lift
@@ -28,15 +28,15 @@ public class WeightCan implements Runnable {
   /**
    * The power to lift a light can but not the heavy can
    */
-  private static final int MIN_POWER = 15; 
+  private static final int MIN_POWER = 15;
   /**
    * The power needed to lift a heavy can
    */
-  private static final int MAX_POWER = 35; 
+  private static final int MAX_POWER = 35;
   /**
    * Time to wait before we request the ultrasonic sensor
    */
-  private static final int WAIT_TIME = 500; 
+  private static final int WAIT_TIME = 500;
   // to say whether or not it still detects a can.
   /**
    * Time out for claw to move
@@ -51,11 +51,11 @@ public class WeightCan implements Runnable {
   /**
    * Initial tachoCount
    */
-  int lastTachoCount = 0; 
+  int lastTachoCount = 0;
   /**
    * Label whether or not the can is heavy
    */
-  boolean heavy = false;  
+  boolean heavy = false;
 
   /**
    * This is the default constructor. It initializes:

@@ -102,7 +102,7 @@ public class Navigation {
    * The WeightCan instance
    */
   private WeightCan weightcan; // The WeightCan instance
-  
+
   /* FIELDS */
   /**
    * The left wheel radius
@@ -223,8 +223,7 @@ public class Navigation {
   public Navigation(Odometer odometer, EV3LargeRegulatedMotor leftMotor,
       EV3LargeRegulatedMotor rightMotor, EV3MediumRegulatedMotor sensorMotor,
       ColorClassification colorclassification, WeightCan weightcan, LineCorrection linecorrection,
-      double leftRadius, double rightRadius, double track)
-      throws OdometerExceptions {
+      double leftRadius, double rightRadius, double track) throws OdometerExceptions {
     this.odometer = odometer;
     this.leftMotor = leftMotor;
     this.rightMotor = rightMotor;
@@ -272,7 +271,7 @@ public class Navigation {
 
     while (leftMotor.isMoving() || rightMotor.isMoving()) { // If the robot is moving
       correctAngle(x, y); // The third variable is to indicate which method is calling
-                             // correctAngle
+                          // correctAngle
       detectCan();
       if (get_can) {
         weightcan.claw_close(MAX_POWER); // Power 30
@@ -325,7 +324,7 @@ public class Navigation {
     // Travel the robot to the destination point
     leftMotor.rotate(convertDistance(leftRadius, travel), true);
     rightMotor.rotate(convertDistance(rightRadius, travel), false);
-    
+
   }
 
   /**
@@ -465,7 +464,7 @@ public class Navigation {
    * @param method - The type of the map point (pre-defined in the SearchCan class)
    */
   void correctAngle(double x, double y) {
-    
+
     /* INITIALIZE VARIABLES */
     boolean key = true;
     while (key) {
@@ -670,7 +669,7 @@ public class Navigation {
         }
       }
     }
-    
+
   }
 
   /**

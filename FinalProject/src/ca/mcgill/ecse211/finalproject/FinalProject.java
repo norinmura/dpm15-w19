@@ -6,7 +6,6 @@ import java.util.Map;
 import lejos.hardware.Button;
 import lejos.hardware.Sound;
 import lejos.hardware.ev3.LocalEV3;
-import lejos.hardware.lcd.TextLCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.motor.EV3MediumRegulatedMotor;
 import lejos.hardware.motor.UnregulatedMotor;
@@ -73,7 +72,7 @@ import lejos.robotics.SampleProvider;
  * @author Floria Peng
  */
 public class FinalProject {
-  
+
   /* STATIC FIELDS */
   // Set these as appropriate for your team and current situation
   /**
@@ -205,7 +204,7 @@ public class FinalProject {
 
     // Initialize WifiConnection class
     WifiConnection conn = new WifiConnection(SERVER_IP, TEAM_NUMBER, ENABLE_DEBUG_WIFI_PRINT);
-    
+
     long timeStart = System.currentTimeMillis();
 
     // Initializing the parameters
@@ -262,7 +261,7 @@ public class FinalProject {
         // Upper right hand corner of the red player search zone
         sz_ur_x = ((Long) data.get("SZR_UR_x")).intValue();
         sz_ur_y = ((Long) data.get("SZR_UR_y")).intValue();
-        
+
       } else if (greenTeam == TEAM_NUMBER) {
         // Green team's starting corner
         corner = ((Long) data.get("GreenCorner")).intValue();
@@ -287,16 +286,16 @@ public class FinalProject {
         // Upper right hand corner of the green player search zone
         sz_ur_x = ((Long) data.get("SZG_UR_x")).intValue();
         sz_ur_y = ((Long) data.get("SZG_UR_y")).intValue();
-        
+
       }
-      
+
       // Lower left hand corner of the Island
       island_ll_x = ((Long) data.get("Island_LL_x")).intValue();
       island_ll_y = ((Long) data.get("Island_LL_y")).intValue();
       // Upper right hand corner of the Island
       island_ur_x = ((Long) data.get("Island_UR_x")).intValue();
       island_ur_y = ((Long) data.get("Island_UR_y")).intValue();
-      
+
     } catch (Exception e) {
       System.err.println("Error: " + e.getMessage());
     }
@@ -318,7 +317,7 @@ public class FinalProject {
 
     Navigation navigation = new Navigation(odometer, leftMotor, rightMotor, sensorMotor,
         colorclassification, weightcan, linecorrection, WHEEL_RAD, WHEEL_RAD, TRACK); // instance
-                                                                                                    // of
+                                                                                      // of
     // Navigation
 
     UltrasonicLocalizer uslocalizer = new UltrasonicLocalizer(odometer, leftMotor, rightMotor,
@@ -348,7 +347,7 @@ public class FinalProject {
       Sound.beep();
       sleep(50);
     }
-    
+
     /* Travel through tunnel */
     double[][] tunnel_points = getPoints(corner, tn_ll_x, tn_ll_y, tn_ur_x, tn_ur_y);
     navigation.travelTo(tunnel_points[0][0] * TILE_SIZE, tunnel_points[0][1] * TILE_SIZE);
@@ -361,7 +360,7 @@ public class FinalProject {
     localizer(0, navigation, lightlocalizer, odometer);
     odometer.setXYT(tunnel_points[0][0] * TILE_SIZE, tunnel_points[0][1] * TILE_SIZE, 0);
     sleep(50);
-    
+
     /* Searching */
     /* Generating the search map */
     int[] upperRight = {sz_ur_x, sz_ur_y};
@@ -408,7 +407,7 @@ public class FinalProject {
     localizer(90, navigation, lightlocalizer, odometer);
     odometer.setXYT(sz_ll_x * TILE_SIZE, sz_ll_y * TILE_SIZE, 90);
     i++;
-    
+
     while (i < fullPath.length && (System.currentTimeMillis() - timeStart) < TIME_OUT) {
       navigation.moveTo(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE);
       if (fullPath[i][2] == 4) { // straight line point
@@ -439,7 +438,8 @@ public class FinalProject {
       }
       i++;
     }
-    
+
+    /* Going back */
     localizer(0, navigation, lightlocalizer, odometer);
     odometer.setXYT(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE, 0);
     sleep(50);
@@ -450,7 +450,7 @@ public class FinalProject {
     navigation.travelTo(tunnel_points[2][0] * TILE_SIZE, tunnel_points[2][1] * TILE_SIZE);
     navigation.travelTo(tunnel_points[1][0] * TILE_SIZE, tunnel_points[1][1] * TILE_SIZE);
     weightcan.claw_open();
-    
+
     /* Waiting for exit */
     // Wait here forever until button pressed to terminate the robot
     Button.waitForAnyPress();
@@ -569,7 +569,7 @@ public class FinalProject {
    * @param tunnel - The x or y position of the middle point of the tunnel entrance
    * @return the x or y value of the before/after tunnel localization point
    */
-  private static double localization (int starting, double tunnel) {
+  private static double localization(int starting, double tunnel) {
     do {
       if (starting < tunnel) {
         tunnel -= 0.5;
@@ -579,7 +579,7 @@ public class FinalProject {
     } while (Math.abs(tunnel - Math.round(tunnel)) > 0.1);
     return tunnel;
   }
-  
+
   /**
    * This method implements the light localization before and after tunnel.
    * 
@@ -587,31 +587,34 @@ public class FinalProject {
    * @param lightlocalizer - The instance of the lightlocalizer class
    * @param odometer - The instance of the odometer class
    */
-  private static void localizer (double angle, Navigation navigation, LightLocalizer lightlocalizer, Odometer odometer) {
+  private static void localizer(double angle, Navigation navigation, LightLocalizer lightlocalizer,
+      Odometer odometer) {
     sleep(50);
     navigation.turnTo(angle);
-    navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
+    navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer
+                                // reading
     lightlocalizer.correctAngle(); // when a line is detected, correct angle
     navigation.back(0, BACK_DIST); // Go back the offset distance between the wheels and sensors
     navigation.rotate(FULL_TURN / 4);
-    navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
+    navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer
+                                // reading
     lightlocalizer.correctAngle(); // when a line is detected, correct angle
     navigation.back(0, BACK_DIST); // Go back the offset distance between the wheels and sensors
     navigation.rotate(-FULL_TURN / 4);
     odometer.position[2] = Math.toRadians(angle);
     sleep(50);
   }
-  
+
   /**
    * This method implements the sleep of this thread.
    * 
    * @param time - The sleeping time
    */
-  private static void sleep (int time) {
+  private static void sleep(int time) {
     try {
       Thread.sleep(time);
     } catch (Exception e) {
     }
   }
-  
+
 }
