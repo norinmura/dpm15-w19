@@ -70,8 +70,8 @@ public class WeightCan implements Runnable {
 
   /**
    * This method tries to lift a can to ANGLE degree. If the can is light, once the lifting is
-   * complete, the sensor will detect a distance superior to NEAR_SENSOR. On the other hand, if the
-   * can is heavy, the sensor will detect a distance less than NEAR_SENSOR.
+   * complete, the motor will get the current tacho count. If the tacho count is large, it is light
+   * can, otherwise, it is a heavy can.
    */
   public void run() {
     heavy = false; // Initialize heavy to false

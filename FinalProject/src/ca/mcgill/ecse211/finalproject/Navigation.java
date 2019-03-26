@@ -121,7 +121,6 @@ public class Navigation {
    */
   double track; // The track of the robot (by measuring the distance between the center of both
                 // wheel)
-
   /**
    * The current x position before the robot moves
    */

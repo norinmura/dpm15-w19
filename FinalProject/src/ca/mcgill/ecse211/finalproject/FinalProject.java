@@ -385,7 +385,6 @@ public class FinalProject {
    * @param tn_ur_y - The y position of the upper right corner of the tunnel
    * @return - The points map generated
    */
-  @SuppressWarnings("unused")
   private static double[][] getPoints(int corner, int tn_ll_x, int tn_ll_y, int tn_ur_x,
       int tn_ur_y) {
     boolean orientation = (tn_ur_x - tn_ll_x) > (tn_ur_y - tn_ll_y); // true if the tunnel is placed
@@ -504,7 +503,6 @@ public class FinalProject {
    * @param lightlocalizer - The instance of the lightlocalizer class
    * @param odometer - The instance of the odometer class
    */
-  @SuppressWarnings("unused")
   private static void localizer (double angle, Navigation navigation, LightLocalizer lightlocalizer, Odometer odometer) {
     sleep(50);
     navigation.turnTo(angle);
