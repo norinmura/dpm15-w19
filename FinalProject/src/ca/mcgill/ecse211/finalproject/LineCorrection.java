@@ -77,7 +77,7 @@ public class LineCorrection {
     System.out.println("");
 
     /* Detect the differential */
-    if ((current[0] - last[0]) * 1000 < -130) { // If there is a black line detected
+    if ((current[0] - last[0]) * 1000 < -38) { // If there is a black line detected
       System.out.println("");
       return true;
     }
@@ -106,7 +106,7 @@ public class LineCorrection {
     System.out.println("");
 
     /* Detect the differential */
-    if ((current[1] - last[1]) * 1000 < -130) { // If there is a black line detected
+    if ((current[1] - last[1]) * 1000 < -38) { // If there is a black line detected
       System.out.println("");
       return true;
     }

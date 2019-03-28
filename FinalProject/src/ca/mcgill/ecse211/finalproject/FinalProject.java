@@ -335,10 +335,10 @@ public class FinalProject {
     odoThread.start();
 
     // Start the thread for us localizer
-    /*Thread usThread = new Thread(uslocalizer);
+    Thread usThread = new Thread(uslocalizer);
     usThread.start();
     usThread.join();
-    sleep(100);*/
+    sleep(100);
 
     // Start the thread for light localizer
     Thread lightThread = new Thread(lightlocalizer);
@@ -352,7 +352,7 @@ public class FinalProject {
     }
 
     /* Travel through tunnel */
-    /*double[][] tunnel_points = getPoints(corner, tn_ll_x, tn_ll_y, tn_ur_x, tn_ur_y);
+    double[][] tunnel_points = getPoints(corner, tn_ll_x, tn_ll_y, tn_ur_x, tn_ur_y);
     sleep(50);
     if (tunnel_points[4][0] != -1 || tunnel_points[4][1] != -1) {
       navigation.travelTo(tunnel_points[4][0] * TILE_SIZE, tunnel_points[4][1] * TILE_SIZE);
@@ -368,12 +368,12 @@ public class FinalProject {
     navigation.travelTo(tunnel_points[2][0] * TILE_SIZE, tunnel_points[2][1] * TILE_SIZE);
     navigation.travelTo(tunnel_points[3][0] * TILE_SIZE, tunnel_points[3][1] * TILE_SIZE);
     localizer(0, navigation, lightlocalizer, odometer);
-    odometer.setXYT(tunnel_points[0][0] * TILE_SIZE, tunnel_points[0][1] * TILE_SIZE, 0);
-    sleep(50);*/
+    odometer.setXYT(tunnel_points[3][0] * TILE_SIZE, tunnel_points[3][1] * TILE_SIZE, 0);
+    sleep(50);
 
     /* Searching */
     /* Generating the search map */
-    /*int[] upperRight = {sz_ur_x, sz_ur_y};
+    int[] upperRight = {sz_ur_x, sz_ur_y};
     int[] lowerLeft = {sz_ll_x, sz_ll_y};
     int horizontal = upperRight[0] - lowerLeft[0] + 1; // The x nodes that will be traveled
     int vertical = upperRight[1] - lowerLeft[1] + 1; // The y nodes that will be traveled
@@ -408,11 +408,11 @@ public class FinalProject {
       } else { // straight line can
         fullPath[i][2] = 4;
       }
-    }*/
+    }
 
     /* Traverse the search map and navigate */
     // Traveling to island and iterating the map
-    /*int i = 0;
+    int i = 0;
     navigation.travelTo(sz_ll_x * TILE_SIZE, sz_ll_y * TILE_SIZE); // First map point
     localizer(90, navigation, lightlocalizer, odometer);
     odometer.setXYT(sz_ll_x * TILE_SIZE, sz_ll_y * TILE_SIZE, 90);
@@ -447,10 +447,10 @@ public class FinalProject {
         break;
       }
       i++;
-    }*/
+    }
 
     /* Going back */
-    /*localizer(0, navigation, lightlocalizer, odometer);
+    localizer(0, navigation, lightlocalizer, odometer);
     odometer.setXYT(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE, 0);
     sleep(50);
     navigation.travelTo(tunnel_points[3][0] * TILE_SIZE, tunnel_points[3][1] * TILE_SIZE);
@@ -459,7 +459,7 @@ public class FinalProject {
     sleep(50);
     navigation.travelTo(tunnel_points[2][0] * TILE_SIZE, tunnel_points[2][1] * TILE_SIZE);
     navigation.travelTo(tunnel_points[1][0] * TILE_SIZE, tunnel_points[1][1] * TILE_SIZE);
-    weightcan.claw_open();*/
+    weightcan.claw_open();
 
     /* Waiting for exit */
     // Wait here forever until button pressed to terminate the robot
@@ -520,12 +520,14 @@ public class FinalProject {
       tunnel_point[1][0] = (tn_ur_x + tn_ll_x) * 0.5;
       tunnel_point[1][1] = tn_ur_y;
     }
-    distance[0] = Math.sqrt(Math.pow(lastx - tunnel_point[0][0], 2) + Math.pow(lasty - tunnel_point[0][1], 2));
-    distance[1] = Math.sqrt(Math.pow(lastx - tunnel_point[1][0], 2) + Math.pow(lasty - tunnel_point[1][1], 2));
+    distance[0] = Math
+        .sqrt(Math.pow(lastx - tunnel_point[0][0], 2) + Math.pow(lasty - tunnel_point[0][1], 2));
+    distance[1] = Math
+        .sqrt(Math.pow(lastx - tunnel_point[1][0], 2) + Math.pow(lasty - tunnel_point[1][1], 2));
     enter_angle = distance[0] < distance[1] ? 1 : 2; // 1 for entering at lower left, 2 for entering
                                                      // at upper right
-    points[0][0] = points[0][1] = points[1][0] =
-        points[1][1] = points[2][0] = points[2][1] = points[3][0] = points[3][1] = points[4][0] = points[4][1] = -1;
+    points[0][0] = points[0][1] = points[1][0] = points[1][1] = points[2][0] =
+        points[2][1] = points[3][0] = points[3][1] = points[4][0] = points[4][1] = -1;
     if (enter_angle == 1) {
       points[0][0] = localization(lastx, tunnel_point[0][0]);
       points[0][1] = localization(lasty, tunnel_point[0][1]);
@@ -565,12 +567,13 @@ public class FinalProject {
     } else {
       System.out.println("Error");
     }
-    double between = Math.sqrt(Math.pow(lastx - points[0][0], 2) + Math.pow(lasty - points[0][1], 2));
+    double between =
+        Math.sqrt(Math.pow(lastx - points[0][0], 2) + Math.pow(lasty - points[0][1], 2));
     if (between > 5) {
       points[4][0] = points[0][0];
       points[4][1] = points[0][1];
-      int addx = lastx > points[4][0]? 1 : -1;
-      int addy = lasty > points[4][1]? 1 : -1;
+      int addx = lastx > points[4][0] ? 1 : -1;
+      int addy = lasty > points[4][1] ? 1 : -1;
       boolean[] flag = {false, false};
       while (between > 5) {
         if (points[4][0] > 1.5 && points[4][0] < 13.5) {

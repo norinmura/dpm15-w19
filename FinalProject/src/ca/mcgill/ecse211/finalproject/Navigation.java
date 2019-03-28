@@ -527,11 +527,11 @@ public class Navigation {
       }
       tend = System.currentTimeMillis();
       if (tend - tstart < FETCH_PERIOD) {
-          try {
-              Thread.sleep(FETCH_PERIOD - (tend - tstart));
-          } catch (InterruptedException e) {
-              e.printStackTrace();
-          }
+        try {
+          Thread.sleep(FETCH_PERIOD - (tend - tstart));
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
       }
     }
   }
