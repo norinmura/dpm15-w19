@@ -24,7 +24,7 @@ public class WeightCan implements Runnable {
   /**
    * Angle to lift
    */
-  private static final int ANGLE = 80;
+  private static final int ANGLE = 90;
   /**
    * The power to lift a light can but not the heavy can
    */
@@ -81,6 +81,7 @@ public class WeightCan implements Runnable {
       Thread.sleep(WAIT_TIME);
     } catch (Exception e) {
     }
+    System.out.println("tacho" + weightMotor.getTachoCount());
     while (true) {
       if (weightMotor.getTachoCount() < INTERVAL) {
         heavy = true;

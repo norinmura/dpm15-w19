@@ -72,6 +72,10 @@ public class Navigation {
    * The time out for the line correction method
    */
   public static final int TIMER = 20;
+  /**
+   * The fetching rate
+   */
+  private static final long FETCH_PERIOD = 50;
 
   /* PRIVATE FIELDS */
   /**
@@ -206,6 +210,14 @@ public class Navigation {
    * How many can is detected
    */
   int count_can = 0;
+  /**
+   * The starting time of each fetch sample
+   */
+  long tstart = 0;
+  /**
+   * The ending time of each fetch sampel
+   */
+  long tend = 0;
 
   /**
    * The constructor for the Navigation class
@@ -273,8 +285,11 @@ public class Navigation {
       correctAngle(x, y); // The third variable is to indicate which method is calling
                           // correctAngle
       detectCan();
+      if (score > 3 || count_can == 5) {
+        go_back = true;
+        return;
+      }
       if (get_can) {
-        weightcan.claw_close(MAX_POWER); // Power 30
         rotate(FULL_TURN / 2);
         forward(TILE_SIZE / 3, 0);
         weightcan.claw_open();
@@ -468,6 +483,7 @@ public class Navigation {
     /* INITIALIZE VARIABLES */
     boolean key = true;
     while (key) {
+      tstart = System.currentTimeMillis();
       if (Math.sqrt(Math.pow((odometer.getXYT()[0] - x), 2)
           + Math.pow((odometer.getXYT()[1] - y), 2)) < TILE_SIZE / 2) {
         break;
@@ -508,6 +524,14 @@ public class Navigation {
         }
         delay = 0;
         moveTo(x, y);
+      }
+      tend = System.currentTimeMillis();
+      if (tend - tstart < FETCH_PERIOD) {
+          try {
+              Thread.sleep(FETCH_PERIOD - (tend - tstart));
+          } catch (InterruptedException e) {
+              e.printStackTrace();
+          }
       }
     }
   }
