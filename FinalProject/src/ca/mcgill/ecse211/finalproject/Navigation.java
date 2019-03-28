@@ -391,7 +391,7 @@ public class Navigation {
       leftMotor.stop(true);
       rightMotor.stop(false);
 
-      move(APPROACH_CAN); // Move close to the can
+      forward(APPROACH_CAN, 0); // Move close to the can
 
       Thread classificationThread = new Thread(colorclassification); // set a new thread to scan
                                                                      // the color
@@ -411,10 +411,11 @@ public class Navigation {
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
-      sensorMotor.setSpeed(ROTATE_SPEED); // set the scanning speed
-      sensorMotor.rotate(FULL_TURN, true); // The sensor motor will rotate less than 180
-                                           // degree (as we are using a gear)
+      
       if (colorclassification.color == 5) {
+        sensorMotor.setSpeed(ROTATE_SPEED); // set the scanning speed
+        sensorMotor.rotate(FULL_TURN, true); // The sensor motor will rotate less than 180
+                                             // degree (as we are using a gear)
         return; // TODO
       }
       score = colorclassification.color;
@@ -455,6 +456,9 @@ public class Navigation {
           Sound.playTone(TUNE, sound_time);
           break;
       }
+      sensorMotor.setSpeed(ROTATE_SPEED); // set the scanning speed
+      sensorMotor.rotate(FULL_TURN, true); // The sensor motor will rotate less than 180
+                                           // degree (as we are using a gear)
       count_can++;
       get_can = true; // The robot is getting a can
     }

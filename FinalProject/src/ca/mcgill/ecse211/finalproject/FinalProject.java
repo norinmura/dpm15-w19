@@ -416,7 +416,7 @@ public class FinalProject {
     navigation.travelTo(sz_ll_x * TILE_SIZE, sz_ll_y * TILE_SIZE); // First map point
     localizer(90, navigation, lightlocalizer, odometer);
     odometer.setXYT(sz_ll_x * TILE_SIZE, sz_ll_y * TILE_SIZE, 90);
-    i++;
+    /*i++;
 
     while (i < fullPath.length && (System.currentTimeMillis() - timeStart) < TIME_OUT) {
       navigation.moveTo(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE);
@@ -447,7 +447,7 @@ public class FinalProject {
         break;
       }
       i++;
-    }
+    }*/
 
     /* Going back */
     localizer(0, navigation, lightlocalizer, odometer);
@@ -459,7 +459,8 @@ public class FinalProject {
     sleep(50);
     navigation.travelTo(tunnel_points[2][0] * TILE_SIZE, tunnel_points[2][1] * TILE_SIZE);
     navigation.travelTo(tunnel_points[1][0] * TILE_SIZE, tunnel_points[1][1] * TILE_SIZE);
-    weightcan.claw_open();
+    Sound.beep();
+    // weightcan.claw_open();
 
     /* Waiting for exit */
     // Wait here forever until button pressed to terminate the robot
