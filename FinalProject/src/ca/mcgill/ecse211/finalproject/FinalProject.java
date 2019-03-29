@@ -471,7 +471,8 @@ public class FinalProject {
   /**
    * This method will generate the path that the robot will follow to travel through the tunnel. It
    * will use the starting corner and the position of the tunnel to generate a proper path,
-   * considering different cases: the tunnel is next to the wall, or next to the river.
+   * considering different cases: the tunnel is next to the wall, or next to the river. And if the
+   * tunnel is far, the 5th point is another localization point before the first point
    * 
    * @param corner - The starting corner
    * @param tn_ll_x - The x position of the lower left corner of the tunnel
@@ -485,9 +486,9 @@ public class FinalProject {
     boolean orientation = (tn_ur_x - tn_ll_x) > (tn_ur_y - tn_ll_y); // true if the tunnel is placed
                                                                      // horizontally
     int lastx, lasty, enter_angle;
-    double[][] tunnel_point = new double[2][2];
-    double[] distance = new double[2];
-    double[][] points = new double[5][2];
+    double[][] tunnel_point = new double[2][2]; // The two points at the entrance of the tunnel
+    double[] distance = new double[2]; // The distance of the tunnel points from the starting grid
+    double[][] points = new double[5][2]; // The return values
     switch (corner) {
       case 0:
         lastx = 1;
@@ -510,12 +511,12 @@ public class FinalProject {
         lasty = -1;
         break;
     }
-    if (orientation) {
+    if (orientation) { // Horizontal tunnel
       tunnel_point[0][0] = tn_ll_x;
       tunnel_point[0][1] = (tn_ur_y + tn_ll_y) * 0.5;
       tunnel_point[1][0] = tn_ur_x;
       tunnel_point[1][1] = (tn_ur_y + tn_ll_y) * 0.5;
-    } else {
+    } else { // Vertical tunnel
       tunnel_point[0][0] = (tn_ur_x + tn_ll_x) * 0.5;
       tunnel_point[0][1] = tn_ll_y;
       tunnel_point[1][0] = (tn_ur_x + tn_ll_x) * 0.5;
@@ -530,13 +531,16 @@ public class FinalProject {
     points[0][0] = points[0][1] = points[1][0] = points[1][1] = points[2][0] =
         points[2][1] = points[3][0] = points[3][1] = points[4][0] = points[4][1] = -1;
     if (enter_angle == 1) {
+      // Get the first localization point before tunnel
       points[0][0] = localization(lastx, tunnel_point[0][0]);
       points[0][1] = localization(lasty, tunnel_point[0][1]);
       if (orientation) {
+        // The robot travel through tunnel from point[1] to point[2]
         points[1][0] = points[0][0];
         points[1][1] = tunnel_point[0][1];
         points[2][0] = points[0][0] + 4;
         points[2][1] = tunnel_point[0][1];
+        // The after exit tunnel localization point
         points[3][0] = points[0][0] + 4;
         points[3][1] = points[0][1];
       } else {
@@ -568,6 +572,8 @@ public class FinalProject {
     } else {
       System.out.println("Error");
     }
+    // If the tunnel is far, generate another localization point somewhere between the starting grid
+    // and the near tunnel localization point
     double between =
         Math.sqrt(Math.pow(lastx - points[0][0], 2) + Math.pow(lasty - points[0][1], 2));
     if (between > 5) {
