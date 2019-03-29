@@ -316,17 +316,17 @@ public class FinalProject {
     LineCorrection linecorrection =
         new LineCorrection(myColorStatus1, sampleColor1, myColorStatus2, sampleColor2);
 
+    // instance of Navigation
     Navigation navigation = new Navigation(odometer, leftMotor, rightMotor, sensorMotor,
-        colorclassification, weightcan, linecorrection, WHEEL_RAD, WHEEL_RAD, TRACK); // instance
-                                                                                      // of
-    // Navigation
+        colorclassification, weightcan, linecorrection, WHEEL_RAD, WHEEL_RAD, TRACK);
 
+    // instance of UltrasonicLocalizer
     UltrasonicLocalizer uslocalizer = new UltrasonicLocalizer(odometer, leftMotor, rightMotor,
-        WHEEL_RAD, WHEEL_RAD, TRACK, usDistance, usData, navigation); // instance of
-                                                                      // UltrasonicLocalizer
+        WHEEL_RAD, WHEEL_RAD, TRACK, usDistance, usData, navigation);
 
+    // instance of LightLocalizer
     LightLocalizer lightlocalizer = new LightLocalizer(odometer, leftMotor, rightMotor, WHEEL_RAD,
-        WHEEL_RAD, TRACK, navigation, linecorrection, corner); // instance of LightLocalizer
+        WHEEL_RAD, TRACK, navigation, linecorrection, corner); 
 
     /* STARTING THREADS */
 
@@ -455,7 +455,7 @@ public class FinalProject {
     sleep(50);
     navigation.travelTo(tunnel_points[3][0] * TILE_SIZE, tunnel_points[3][1] * TILE_SIZE);
     localizer(0, navigation, lightlocalizer, odometer);
-    odometer.setXYT(tunnel_points[0][0] * TILE_SIZE, tunnel_points[0][1] * TILE_SIZE, 0);
+    odometer.setXYT(tunnel_points[3][0] * TILE_SIZE, tunnel_points[3][1] * TILE_SIZE, 0);
     sleep(50);
     navigation.travelTo(tunnel_points[2][0] * TILE_SIZE, tunnel_points[2][1] * TILE_SIZE);
     navigation.travelTo(tunnel_points[1][0] * TILE_SIZE, tunnel_points[1][1] * TILE_SIZE);
