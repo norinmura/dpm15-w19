@@ -54,6 +54,10 @@ public class LightLocalizer implements Runnable {
    */
   private static final double BACK_DIST = 9.0; // Travel back distance (distance between wheels and
                                                // sensors)
+  /**
+   * The fetching rate
+   */
+  private static final long FETCH_PERIOD = 50;
 
   /* NON-PRIVATE FIELDS */
   /**
@@ -114,6 +118,14 @@ public class LightLocalizer implements Runnable {
    * The before line correction angle
    */
   double before = 0; // The before line correction angle
+  /**
+   * The starting time of each fetch sample
+   */
+  long tstart = 0;
+  /**
+   * The ending time of each fetch sampel
+   */
+  long tend = 0;
 
   /**
    * The default constructor of this class
@@ -184,11 +196,11 @@ public class LightLocalizer implements Runnable {
         odometer.position[2] = Math.toRadians(270);
         break;
       case 2:
-        odometer.setXYT(14 * TILE_SIZE, 9 * TILE_SIZE, 180);
+        odometer.setXYT(14 * TILE_SIZE, 8 * TILE_SIZE, 180);
         odometer.position[2] = Math.toRadians(180);
         break;
       case 3:
-        odometer.setXYT(1 * TILE_SIZE, 9 * TILE_SIZE, 90);
+        odometer.setXYT(1 * TILE_SIZE, 8 * TILE_SIZE, 90);
         odometer.position[2] = Math.toRadians(90);
         break;
     }
@@ -204,6 +216,7 @@ public class LightLocalizer implements Runnable {
        * Line 0 corresponds to boolean if left motor detected a line Line 1 corresponds to boolean
        * if right motor detected a line
        */
+      tstart = System.currentTimeMillis();
       line[0] = linecorrection.filter1(); // set line[0] to whether or not a line was detected
       line[1] = linecorrection.filter2(); // set line[1] to whether or not a line was detected
       if (line[0]) { // If the black line is detected, the robot will stop (left motor)
@@ -227,6 +240,14 @@ public class LightLocalizer implements Runnable {
           odometer.position[2] = Math.toRadians(90);
         }
         break;
+      }
+      tend = System.currentTimeMillis();
+      if (tend - tstart < FETCH_PERIOD) {
+        try {
+          Thread.sleep(FETCH_PERIOD - (tend - tstart));
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
       }
     }
   }

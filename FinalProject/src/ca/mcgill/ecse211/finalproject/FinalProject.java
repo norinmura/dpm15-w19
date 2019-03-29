@@ -2,11 +2,11 @@ package ca.mcgill.ecse211.finalproject;
 
 import ca.mcgill.ecse211.odometer.*;
 import ca.mcgill.ecse211.WiFiClient.WifiConnection;
+import java.util.Arrays;
 import java.util.Map;
 import lejos.hardware.Button;
 import lejos.hardware.Sound;
 import lejos.hardware.ev3.LocalEV3;
-import lejos.hardware.lcd.TextLCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.motor.EV3MediumRegulatedMotor;
 import lejos.hardware.motor.UnregulatedMotor;
@@ -73,14 +73,14 @@ import lejos.robotics.SampleProvider;
  * @author Floria Peng
  */
 public class FinalProject {
-  
+
   /* STATIC FIELDS */
   // Set these as appropriate for your team and current situation
   /**
    * The IP address of the server
    */
 
-  private static final String SERVER_IP = "192.168.2.5";
+  private static final String SERVER_IP = "192.168.2.12";
 
   /**
    * The team number of the user
@@ -205,7 +205,7 @@ public class FinalProject {
 
     // Initialize WifiConnection class
     WifiConnection conn = new WifiConnection(SERVER_IP, TEAM_NUMBER, ENABLE_DEBUG_WIFI_PRINT);
-    
+
     long timeStart = System.currentTimeMillis();
 
     // Initializing the parameters
@@ -262,7 +262,7 @@ public class FinalProject {
         // Upper right hand corner of the red player search zone
         sz_ur_x = ((Long) data.get("SZR_UR_x")).intValue();
         sz_ur_y = ((Long) data.get("SZR_UR_y")).intValue();
-        
+
       } else if (greenTeam == TEAM_NUMBER) {
         // Green team's starting corner
         corner = ((Long) data.get("GreenCorner")).intValue();
@@ -287,16 +287,16 @@ public class FinalProject {
         // Upper right hand corner of the green player search zone
         sz_ur_x = ((Long) data.get("SZG_UR_x")).intValue();
         sz_ur_y = ((Long) data.get("SZG_UR_y")).intValue();
-        
+
       }
-      
+
       // Lower left hand corner of the Island
       island_ll_x = ((Long) data.get("Island_LL_x")).intValue();
       island_ll_y = ((Long) data.get("Island_LL_y")).intValue();
       // Upper right hand corner of the Island
       island_ur_x = ((Long) data.get("Island_UR_x")).intValue();
       island_ur_y = ((Long) data.get("Island_UR_y")).intValue();
-      
+
     } catch (Exception e) {
       System.err.println("Error: " + e.getMessage());
     }
@@ -316,17 +316,17 @@ public class FinalProject {
     LineCorrection linecorrection =
         new LineCorrection(myColorStatus1, sampleColor1, myColorStatus2, sampleColor2);
 
+    // instance of Navigation
     Navigation navigation = new Navigation(odometer, leftMotor, rightMotor, sensorMotor,
-        colorclassification, weightcan, linecorrection, WHEEL_RAD, WHEEL_RAD, TRACK); // instance
-                                                                                                    // of
-    // Navigation
+        colorclassification, weightcan, linecorrection, WHEEL_RAD, WHEEL_RAD, TRACK);
 
+    // instance of UltrasonicLocalizer
     UltrasonicLocalizer uslocalizer = new UltrasonicLocalizer(odometer, leftMotor, rightMotor,
-        WHEEL_RAD, WHEEL_RAD, TRACK, usDistance, usData, navigation); // instance of
-                                                                      // UltrasonicLocalizer
+        WHEEL_RAD, WHEEL_RAD, TRACK, usDistance, usData, navigation);
 
+    // instance of LightLocalizer
     LightLocalizer lightlocalizer = new LightLocalizer(odometer, leftMotor, rightMotor, WHEEL_RAD,
-        WHEEL_RAD, TRACK, navigation, linecorrection, corner); // instance of LightLocalizer
+        WHEEL_RAD, TRACK, navigation, linecorrection, corner); 
 
     /* STARTING THREADS */
 
@@ -338,19 +338,28 @@ public class FinalProject {
     Thread usThread = new Thread(uslocalizer);
     usThread.start();
     usThread.join();
+    sleep(100);
 
     // Start the thread for light localizer
     Thread lightThread = new Thread(lightlocalizer);
     lightThread.start();
     lightThread.join();
+    sleep(100);
 
     for (int i = 0; i < 3; i++) {
       Sound.beep();
       sleep(50);
     }
-    
+
     /* Travel through tunnel */
     double[][] tunnel_points = getPoints(corner, tn_ll_x, tn_ll_y, tn_ur_x, tn_ur_y);
+    sleep(50);
+    if (tunnel_points[4][0] != -1 || tunnel_points[4][1] != -1) {
+      navigation.travelTo(tunnel_points[4][0] * TILE_SIZE, tunnel_points[4][1] * TILE_SIZE);
+      localizer(0, navigation, lightlocalizer, odometer);
+      odometer.setXYT(tunnel_points[4][0] * TILE_SIZE, tunnel_points[4][1] * TILE_SIZE, 0);
+      sleep(50);
+    }
     navigation.travelTo(tunnel_points[0][0] * TILE_SIZE, tunnel_points[0][1] * TILE_SIZE);
     localizer(0, navigation, lightlocalizer, odometer);
     odometer.setXYT(tunnel_points[0][0] * TILE_SIZE, tunnel_points[0][1] * TILE_SIZE, 0);
@@ -359,14 +368,100 @@ public class FinalProject {
     navigation.travelTo(tunnel_points[2][0] * TILE_SIZE, tunnel_points[2][1] * TILE_SIZE);
     navigation.travelTo(tunnel_points[3][0] * TILE_SIZE, tunnel_points[3][1] * TILE_SIZE);
     localizer(0, navigation, lightlocalizer, odometer);
-    odometer.setXYT(tunnel_points[0][0] * TILE_SIZE, tunnel_points[0][1] * TILE_SIZE, 0);
+    odometer.setXYT(tunnel_points[3][0] * TILE_SIZE, tunnel_points[3][1] * TILE_SIZE, 0);
     sleep(50);
-    
-    /* Arrive at lower left corner of the search zone */
+
+    /* Searching */
+    /* Generating the search map */
+    int[] upperRight = {sz_ur_x, sz_ur_y};
+    int[] lowerLeft = {sz_ll_x, sz_ll_y};
+    int horizontal = upperRight[0] - lowerLeft[0] + 1; // The x nodes that will be traveled
+    int vertical = upperRight[1] - lowerLeft[1] + 1; // The y nodes that will be traveled
+
+    int[][] fullPath = new int[horizontal * vertical][3]; // Set up a 2D array of map
+    int direction = 1; // Traveling to the right
+    for (int i = 0; i < vertical; i++) {
+      for (int j = 0; j < horizontal; j++) {
+        if (direction == 1) { // Map generation
+          fullPath[i * horizontal + j][0] = lowerLeft[0] + j;
+          fullPath[i * horizontal + j][1] = lowerLeft[1] + i;
+        } else {
+          fullPath[i * horizontal + j][0] = upperRight[0] - j;
+          fullPath[i * horizontal + j][1] = lowerLeft[1] + i;
+        }
+      }
+      direction *= -1; // Traveling to the left
+    }
+    for (int i = 0; i < fullPath.length; i++) {
+      if (i % (2 * horizontal) == horizontal - 1) {
+        // right lower side can
+        fullPath[i][2] = 0;
+      } else if (i % (2 * horizontal) == horizontal) {
+        // right upper side can
+        fullPath[i][2] = 1;
+      } else if (i % (2 * horizontal) == 2 * horizontal - 1) {
+        // left lower side can
+        fullPath[i][2] = 2;
+      } else if (i % (2 * horizontal) == 0) {
+        // left upper side can
+        fullPath[i][2] = 3;
+      } else { // straight line can
+        fullPath[i][2] = 4;
+      }
+    }
+
+    /* Traverse the search map and navigate */
+    // Traveling to island and iterating the map
+    int i = 0;
     navigation.travelTo(sz_ll_x * TILE_SIZE, sz_ll_y * TILE_SIZE); // First map point
     localizer(90, navigation, lightlocalizer, odometer);
     odometer.setXYT(sz_ll_x * TILE_SIZE, sz_ll_y * TILE_SIZE, 90);
-    
+    /*i++;
+
+    while (i < fullPath.length && (System.currentTimeMillis() - timeStart) < TIME_OUT) {
+      navigation.moveTo(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE);
+      if (fullPath[i][2] == 4) { // straight line point
+        if (odometer.getXYT()[2] < 180) {
+          navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE,
+              -FULL_TURN / 4, 1);
+        } else {
+          navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE,
+              FULL_TURN / 4, 1);
+        }
+      } else if (fullPath[i][2] == 1) { // right upper point
+        navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE,
+            -FULL_TURN / 4, 1);
+      } else if (fullPath[i][2] == 3) {
+        navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE,
+            FULL_TURN / 4, 1);
+      } else if (fullPath[i][2] == 0) { // right localize
+        localizer(0, navigation, lightlocalizer, odometer);
+        odometer.setXYT(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE, 0);
+        sleep(50);
+      } else if (fullPath[i][2] == 2) { // left localize
+        localizer(0, navigation, lightlocalizer, odometer);
+        odometer.setXYT(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE, 0);
+        sleep(50);
+      }
+      if (navigation.go_back) {
+        break;
+      }
+      i++;
+    }*/
+
+    /* Going back */
+    localizer(0, navigation, lightlocalizer, odometer);
+    odometer.setXYT(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE, 0);
+    sleep(50);
+    navigation.travelTo(tunnel_points[3][0] * TILE_SIZE, tunnel_points[3][1] * TILE_SIZE);
+    localizer(0, navigation, lightlocalizer, odometer);
+    odometer.setXYT(tunnel_points[3][0] * TILE_SIZE, tunnel_points[3][1] * TILE_SIZE, 0);
+    sleep(50);
+    navigation.travelTo(tunnel_points[2][0] * TILE_SIZE, tunnel_points[2][1] * TILE_SIZE);
+    navigation.travelTo(tunnel_points[1][0] * TILE_SIZE, tunnel_points[1][1] * TILE_SIZE);
+    Sound.beep();
+    // weightcan.claw_open();
+
     /* Waiting for exit */
     // Wait here forever until button pressed to terminate the robot
     Button.waitForAnyPress();
@@ -376,7 +471,8 @@ public class FinalProject {
   /**
    * This method will generate the path that the robot will follow to travel through the tunnel. It
    * will use the starting corner and the position of the tunnel to generate a proper path,
-   * considering different cases: the tunnel is next to the wall, or next to the river.
+   * considering different cases: the tunnel is next to the wall, or next to the river. And if the
+   * tunnel is far, the 5th point is another localization point before the first point
    * 
    * @param corner - The starting corner
    * @param tn_ll_x - The x position of the lower left corner of the tunnel
@@ -390,9 +486,9 @@ public class FinalProject {
     boolean orientation = (tn_ur_x - tn_ll_x) > (tn_ur_y - tn_ll_y); // true if the tunnel is placed
                                                                      // horizontally
     int lastx, lasty, enter_angle;
-    double[][] tunnel_point = new double[2][2];
-    double[] distance = new double[2];
-    double[][] points = new double[4][2];
+    double[][] tunnel_point = new double[2][2]; // The two points at the entrance of the tunnel
+    double[] distance = new double[2]; // The distance of the tunnel points from the starting grid
+    double[][] points = new double[5][2]; // The return values
     switch (corner) {
       case 0:
         lastx = 1;
@@ -415,33 +511,36 @@ public class FinalProject {
         lasty = -1;
         break;
     }
-    if (orientation) {
+    if (orientation) { // Horizontal tunnel
       tunnel_point[0][0] = tn_ll_x;
       tunnel_point[0][1] = (tn_ur_y + tn_ll_y) * 0.5;
       tunnel_point[1][0] = tn_ur_x;
       tunnel_point[1][1] = (tn_ur_y + tn_ll_y) * 0.5;
-    } else {
-      tunnel_point[0][0] = (float) ((tn_ur_x + tn_ll_x) * 0.5);;
+    } else { // Vertical tunnel
+      tunnel_point[0][0] = (tn_ur_x + tn_ll_x) * 0.5;
       tunnel_point[0][1] = tn_ll_y;
-      tunnel_point[1][0] = (float) ((tn_ur_x + tn_ll_x) * 0.5);;
+      tunnel_point[1][0] = (tn_ur_x + tn_ll_x) * 0.5;
       tunnel_point[1][1] = tn_ur_y;
     }
-    distance[0] = (float) Math
+    distance[0] = Math
         .sqrt(Math.pow(lastx - tunnel_point[0][0], 2) + Math.pow(lasty - tunnel_point[0][1], 2));
-    distance[1] = (float) Math
+    distance[1] = Math
         .sqrt(Math.pow(lastx - tunnel_point[1][0], 2) + Math.pow(lasty - tunnel_point[1][1], 2));
     enter_angle = distance[0] < distance[1] ? 1 : 2; // 1 for entering at lower left, 2 for entering
                                                      // at upper right
-    points[0][0] = points[0][1] = points[1][0] =
-        points[1][1] = points[2][0] = points[2][1] = points[3][0] = points[3][1] = -1;
+    points[0][0] = points[0][1] = points[1][0] = points[1][1] = points[2][0] =
+        points[2][1] = points[3][0] = points[3][1] = points[4][0] = points[4][1] = -1;
     if (enter_angle == 1) {
+      // Get the first localization point before tunnel
       points[0][0] = localization(lastx, tunnel_point[0][0]);
       points[0][1] = localization(lasty, tunnel_point[0][1]);
       if (orientation) {
+        // The robot travel through tunnel from point[1] to point[2]
         points[1][0] = points[0][0];
         points[1][1] = tunnel_point[0][1];
         points[2][0] = points[0][0] + 4;
         points[2][1] = tunnel_point[0][1];
+        // The after exit tunnel localization point
         points[3][0] = points[0][0] + 4;
         points[3][1] = points[0][1];
       } else {
@@ -473,6 +572,33 @@ public class FinalProject {
     } else {
       System.out.println("Error");
     }
+    // If the tunnel is far, generate another localization point somewhere between the starting grid
+    // and the near tunnel localization point
+    double between =
+        Math.sqrt(Math.pow(lastx - points[0][0], 2) + Math.pow(lasty - points[0][1], 2));
+    if (between > 5) {
+      points[4][0] = points[0][0];
+      points[4][1] = points[0][1];
+      int addx = lastx > points[4][0] ? 1 : -1;
+      int addy = lasty > points[4][1] ? 1 : -1;
+      boolean[] flag = {false, false};
+      while (between > 5) {
+        if (points[4][0] > 1.5 && points[4][0] < 13.5) {
+          points[4][0] += addx;
+        } else {
+          flag[0] = true;
+        }
+        if (points[4][1] > 1.5 && points[4][1] < 7.5) {
+          points[4][1] += addy;
+        } else {
+          flag[1] = true;
+        }
+        if (flag[0] && flag[1]) {
+          break;
+        }
+        between = Math.sqrt(Math.pow(lastx - points[4][0], 2) + Math.pow(lasty - points[4][1], 2));
+      }
+    }
     return points;
   }
 
@@ -485,7 +611,7 @@ public class FinalProject {
    * @param tunnel - The x or y position of the middle point of the tunnel entrance
    * @return the x or y value of the before/after tunnel localization point
    */
-  private static double localization (int starting, double tunnel) {
+  private static double localization(int starting, double tunnel) {
     do {
       if (starting < tunnel) {
         tunnel -= 0.5;
@@ -495,7 +621,7 @@ public class FinalProject {
     } while (Math.abs(tunnel - Math.round(tunnel)) > 0.1);
     return tunnel;
   }
-  
+
   /**
    * This method implements the light localization before and after tunnel.
    * 
@@ -503,31 +629,34 @@ public class FinalProject {
    * @param lightlocalizer - The instance of the lightlocalizer class
    * @param odometer - The instance of the odometer class
    */
-  private static void localizer (double angle, Navigation navigation, LightLocalizer lightlocalizer, Odometer odometer) {
+  private static void localizer(double angle, Navigation navigation, LightLocalizer lightlocalizer,
+      Odometer odometer) {
     sleep(50);
     navigation.turnTo(angle);
-    navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
+    navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer
+                                // reading
     lightlocalizer.correctAngle(); // when a line is detected, correct angle
     navigation.back(0, BACK_DIST); // Go back the offset distance between the wheels and sensors
     navigation.rotate(FULL_TURN / 4);
-    navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer reading
+    navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer
+                                // reading
     lightlocalizer.correctAngle(); // when a line is detected, correct angle
     navigation.back(0, BACK_DIST); // Go back the offset distance between the wheels and sensors
     navigation.rotate(-FULL_TURN / 4);
     odometer.position[2] = Math.toRadians(angle);
     sleep(50);
   }
-  
+
   /**
    * This method implements the sleep of this thread.
    * 
    * @param time - The sleeping time
    */
-  private static void sleep (int time) {
+  private static void sleep(int time) {
     try {
       Thread.sleep(time);
     } catch (Exception e) {
     }
   }
-  
+
 }
