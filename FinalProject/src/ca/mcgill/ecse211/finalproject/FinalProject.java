@@ -391,6 +391,12 @@ public class FinalProject {
             sleep(50);
           }
         }
+        // Localize every 3 tiles
+        if (i % 3 == 0) {
+          localizer(0, navigation, lightlocalizer, odometer);
+          odometer.setXYT(map[i][0] * TILE_SIZE, map[i][1] * TILE_SIZE, 0);
+          sleep(50);
+        }
         navigation.roundSearch(map[i][0] * TILE_SIZE, map[i][1] * TILE_SIZE, FULL_TURN, map[i][2]);
       }
 
@@ -399,12 +405,6 @@ public class FinalProject {
         odometer.setXYT(map[i][0] * TILE_SIZE, map[i][1] * TILE_SIZE, 0);
         sleep(50);
         break;
-      }
-      // Localize every 3 tiles
-      if (i % 3 == 0) {
-        localizer(0, navigation, lightlocalizer, odometer);
-        odometer.setXYT(map[i][0] * TILE_SIZE, map[i][1] * TILE_SIZE, 0);
-        sleep(50);
       }
       i++;
     }
