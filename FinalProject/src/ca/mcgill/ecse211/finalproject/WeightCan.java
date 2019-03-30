@@ -26,6 +26,10 @@ public class WeightCan implements Runnable {
    */
   private static final int MIN_POWER = 20;
   /**
+   * The power to lift a heavy can
+   */
+  private static final int MAX_POWER = 35;
+  /**
    * Time to wait before we request the ultrasonic sensor
    */
   private static final int WAIT_TIME = 1000;
@@ -80,6 +84,8 @@ public class WeightCan implements Runnable {
       e1.printStackTrace();
     }
     if (weightMotor.getTachoCount() < INTERVAL) {
+      claw_open();
+      claw_close(MAX_POWER);
       heavy = true;
     } else {
       heavy = false;
