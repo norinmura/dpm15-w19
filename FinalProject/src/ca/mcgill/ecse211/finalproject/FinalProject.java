@@ -416,6 +416,16 @@ public class FinalProject {
     sleep(50);
     navigation.travelTo(tunnel_points[2][0] * TILE_SIZE, tunnel_points[2][1] * TILE_SIZE);
     navigation.travelTo(tunnel_points[1][0] * TILE_SIZE, tunnel_points[1][1] * TILE_SIZE);
+    navigation.travelTo(tunnel_points[0][0] * TILE_SIZE, tunnel_points[0][1] * TILE_SIZE);
+    localizer(0, navigation, lightlocalizer, odometer);
+    odometer.setXYT(tunnel_points[0][0] * TILE_SIZE, tunnel_points[0][1] * TILE_SIZE, 0);
+    sleep(50);
+    if (tunnel_points[4][0] != -1 || tunnel_points[4][1] != -1) {
+      navigation.travelTo(tunnel_points[4][0] * TILE_SIZE, tunnel_points[4][1] * TILE_SIZE);
+      localizer(0, navigation, lightlocalizer, odometer);
+      odometer.setXYT(tunnel_points[4][0] * TILE_SIZE, tunnel_points[4][1] * TILE_SIZE, 0);
+      sleep(50);
+    }
     switch (corner) {
       case 0:
         navigation.travelTo(0.5 * TILE_SIZE, 0.5 * TILE_SIZE);

@@ -1,5 +1,7 @@
 package ca.mcgill.ecse211.finalproject;
 
+import lejos.hardware.Button;
+import lejos.hardware.lcd.LCD;
 import lejos.hardware.motor.UnregulatedMotor;
 
 /**
@@ -28,7 +30,7 @@ public class WeightCan implements Runnable {
   /**
    * The power to lift a light can but not the heavy can
    */
-  private static final int MIN_POWER = 15;
+  private static final int MIN_POWER = 20;
   /**
    * The power needed to lift a heavy can
    */
@@ -36,7 +38,7 @@ public class WeightCan implements Runnable {
   /**
    * Time to wait before we request the ultrasonic sensor
    */
-  private static final int WAIT_TIME = 500;
+  private static final int WAIT_TIME = 1000;
   // to say whether or not it still detects a can.
   /**
    * Time out for claw to move
@@ -45,7 +47,7 @@ public class WeightCan implements Runnable {
   /**
    * The comparison interval
    */
-  private static final int INTERVAL = 80;
+  private static final int INTERVAL = 85;
 
   /* Fields */
   /**
@@ -75,27 +77,18 @@ public class WeightCan implements Runnable {
    */
   public void run() {
     heavy = false; // Initialize heavy to false
+    claw_open();
     weightMotor.resetTachoCount();
     claw_close(MIN_POWER); // try to lift the can
     try {
       Thread.sleep(WAIT_TIME);
-    } catch (Exception e) {
+    } catch (InterruptedException e1) {
+      e1.printStackTrace();
     }
-    System.out.println("tacho" + weightMotor.getTachoCount());
-    while (true) {
-      if (weightMotor.getTachoCount() < INTERVAL) {
-        heavy = true;
-        claw_open();
-        try {
-          Thread.sleep(WAIT_TIME);
-        } catch (Exception e) {
-        }
-        claw_close(MAX_POWER);
-        break;
-      } else {
-        heavy = false;
-        break;
-      }
+    if (weightMotor.getTachoCount() < INTERVAL) {
+      heavy = true;
+    } else {
+      heavy = false;
     }
   }
 
@@ -109,42 +102,38 @@ public class WeightCan implements Runnable {
   void claw_close(int power) {
     weightMotor.resetTachoCount();
     weightMotor.setPower(power);
-    int i = 0;
-    while (weightMotor.getTachoCount() < ANGLE) {
+
+    double beginTime = System.currentTimeMillis();
+    double endTime = System.currentTimeMillis();
+    while (true) {
       weightMotor.forward();
-      i++;
-      try {
-        Thread.sleep(50);
-      } catch (Exception e) {
-      }
-      if (i > TIMER) { // A small timer counter
-        i = 0;
+      endTime = System.currentTimeMillis();
+      System.out.println(endTime - beginTime);
+      if (endTime - beginTime > 2500) {
         break;
       }
     }
-    weightMotor.stop();
+    weightMotor.setPower(0);
   }
 
   /**
    * Drop the can back on the floor and open the claw
    */
-  void claw_open() {
-    weightMotor.setPower(MIN_POWER);
-    int i = 0;
-    while (weightMotor.getTachoCount() > 0) {
+  void claw_open() { // reset the claw to a starting point
+
+    double beginTime = System.currentTimeMillis();
+    double endTime = System.currentTimeMillis();
+    while (true) {
+      weightMotor.setPower(10);
       weightMotor.backward();
-      i++;
-      try {
-        Thread.sleep(50);
-      } catch (Exception e) {
-      }
-      if (i > TIMER) { // A small timer counter
-        i = 0;
+      endTime = System.currentTimeMillis();
+      if (endTime - beginTime > 2000) {
         break;
+      } else {
+
       }
     }
-    weightMotor.stop();
-    weightMotor.resetTachoCount();
+    weightMotor.setPower(0);
   }
 
 }
