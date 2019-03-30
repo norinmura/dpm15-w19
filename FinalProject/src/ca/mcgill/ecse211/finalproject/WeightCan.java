@@ -1,7 +1,5 @@
 package ca.mcgill.ecse211.finalproject;
 
-import lejos.hardware.Button;
-import lejos.hardware.lcd.LCD;
 import lejos.hardware.motor.UnregulatedMotor;
 
 /**
@@ -24,26 +22,22 @@ public class WeightCan implements Runnable {
   private ColorClassification colorclassification;
   /* Constants */
   /**
-   * Angle to lift
-   */
-  private static final int ANGLE = 90;
-  /**
    * The power to lift a light can but not the heavy can
    */
   private static final int MIN_POWER = 20;
-  /**
-   * The power needed to lift a heavy can
-   */
-  private static final int MAX_POWER = 35;
   /**
    * Time to wait before we request the ultrasonic sensor
    */
   private static final int WAIT_TIME = 1000;
   // to say whether or not it still detects a can.
   /**
-   * Time out for claw to move
+   * Time out for claw to close
    */
-  private static final int TIMER = 60;
+  private static final int TIMER_CLOSE = 2500;
+  /**
+   * Time out for claw to open
+   */
+  private static final int TIMER_OPEN = 2000;
   /**
    * The comparison interval
    */
@@ -96,7 +90,7 @@ public class WeightCan implements Runnable {
    * This method set the power to the unregulated motor and tries to lift the can (till the angle
    * value).
    * 
-   * @param power: value between 0 and 100 that represent the percentage of how much power of the
+   * @param power - value between 0 and 100 that represent the percentage of how much power of the
    *        motor you use
    */
   void claw_close(int power) {
@@ -109,7 +103,7 @@ public class WeightCan implements Runnable {
       weightMotor.forward();
       endTime = System.currentTimeMillis();
       System.out.println(endTime - beginTime);
-      if (endTime - beginTime > 2500) {
+      if (endTime - beginTime > TIMER_CLOSE) {
         break;
       }
     }
@@ -127,7 +121,7 @@ public class WeightCan implements Runnable {
       weightMotor.setPower(10);
       weightMotor.backward();
       endTime = System.currentTimeMillis();
-      if (endTime - beginTime > 2000) {
+      if (endTime - beginTime > TIMER_OPEN) {
         break;
       } else {
 
