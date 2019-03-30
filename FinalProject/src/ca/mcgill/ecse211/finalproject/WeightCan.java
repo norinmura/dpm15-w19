@@ -129,7 +129,7 @@ public class WeightCan implements Runnable {
    * Drop the can back on the floor and open the claw
    */
   void claw_open() {
-    weightMotor.setPower(MAX_POWER);
+    weightMotor.setPower(MIN_POWER);
     int i = 0;
     while (weightMotor.getTachoCount() > 0) {
       weightMotor.backward();

@@ -2,7 +2,6 @@ package ca.mcgill.ecse211.finalproject;
 
 import ca.mcgill.ecse211.odometer.*;
 import ca.mcgill.ecse211.WiFiClient.WifiConnection;
-import java.util.Arrays;
 import java.util.Map;
 import lejos.hardware.Button;
 import lejos.hardware.Sound;
@@ -80,7 +79,7 @@ public class FinalProject {
    * The IP address of the server
    */
 
-  private static final String SERVER_IP = "192.168.2.12";
+  private static final String SERVER_IP = "192.168.2.20";
 
   /**
    * The team number of the user
@@ -334,7 +333,7 @@ public class FinalProject {
     Thread odoThread = new Thread(odometer);
     odoThread.start();
 
-    // Start the thread for us localizer
+    /*// Start the thread for us localizer
     Thread usThread = new Thread(uslocalizer);
     usThread.start();
     usThread.join();
@@ -344,7 +343,7 @@ public class FinalProject {
     Thread lightThread = new Thread(lightlocalizer);
     lightThread.start();
     lightThread.join();
-    sleep(100);
+    sleep(100);*/
 
     for (int i = 0; i < 3; i++) {
       Sound.beep();
@@ -371,96 +370,71 @@ public class FinalProject {
     odometer.setXYT(tunnel_points[3][0] * TILE_SIZE, tunnel_points[3][1] * TILE_SIZE, 0);
     sleep(50);
 
-    /* Searching */
-    /* Generating the search map */
-    int[] upperRight = {sz_ur_x, sz_ur_y};
-    int[] lowerLeft = {sz_ll_x, sz_ll_y};
-    int horizontal = upperRight[0] - lowerLeft[0] + 1; // The x nodes that will be traveled
-    int vertical = upperRight[1] - lowerLeft[1] + 1; // The y nodes that will be traveled
-
-    int[][] fullPath = new int[horizontal * vertical][3]; // Set up a 2D array of map
-    int direction = 1; // Traveling to the right
-    for (int i = 0; i < vertical; i++) {
-      for (int j = 0; j < horizontal; j++) {
-        if (direction == 1) { // Map generation
-          fullPath[i * horizontal + j][0] = lowerLeft[0] + j;
-          fullPath[i * horizontal + j][1] = lowerLeft[1] + i;
-        } else {
-          fullPath[i * horizontal + j][0] = upperRight[0] - j;
-          fullPath[i * horizontal + j][1] = lowerLeft[1] + i;
-        }
-      }
-      direction *= -1; // Traveling to the left
-    }
-    for (int i = 0; i < fullPath.length; i++) {
-      if (i % (2 * horizontal) == horizontal - 1) {
-        // right lower side can
-        fullPath[i][2] = 0;
-      } else if (i % (2 * horizontal) == horizontal) {
-        // right upper side can
-        fullPath[i][2] = 1;
-      } else if (i % (2 * horizontal) == 2 * horizontal - 1) {
-        // left lower side can
-        fullPath[i][2] = 2;
-      } else if (i % (2 * horizontal) == 0) {
-        // left upper side can
-        fullPath[i][2] = 3;
-      } else { // straight line can
-        fullPath[i][2] = 4;
-      }
-    }
-
     /* Traverse the search map and navigate */
     // Traveling to island and iterating the map
+    int[][] map = searchMap(sz_ll_x, sz_ll_y, sz_ur_x, sz_ur_y);
     int i = 0;
-    navigation.travelTo(sz_ll_x * TILE_SIZE, sz_ll_y * TILE_SIZE); // First map point
-    localizer(90, navigation, lightlocalizer, odometer);
-    odometer.setXYT(sz_ll_x * TILE_SIZE, sz_ll_y * TILE_SIZE, 90);
-    /*i++;
-
-    while (i < fullPath.length && (System.currentTimeMillis() - timeStart) < TIME_OUT) {
-      navigation.moveTo(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE);
-      if (fullPath[i][2] == 4) { // straight line point
-        if (odometer.getXYT()[2] < 180) {
-          navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE,
-              -FULL_TURN / 4, 1);
-        } else {
-          navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE,
-              FULL_TURN / 4, 1);
+    while (i < map.length) {
+      navigation.moveTo(map[i][0] * TILE_SIZE, map[i][1] * TILE_SIZE);
+      if (navigation.get_can) {
+        navigation.travelTo(map[i][0] * TILE_SIZE, map[i][1] * TILE_SIZE);
+        if (i == 0) {
+          for (int j = 0; j < 3; j++) { // beep 3 times upon arriving
+            Sound.beep();
+            sleep(50);
+          }
         }
-      } else if (fullPath[i][2] == 1) { // right upper point
-        navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE,
-            -FULL_TURN / 4, 1);
-      } else if (fullPath[i][2] == 3) {
-        navigation.roundSearch(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE,
-            FULL_TURN / 4, 1);
-      } else if (fullPath[i][2] == 0) { // right localize
-        localizer(0, navigation, lightlocalizer, odometer);
-        odometer.setXYT(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE, 0);
-        sleep(50);
-      } else if (fullPath[i][2] == 2) { // left localize
-        localizer(0, navigation, lightlocalizer, odometer);
-        odometer.setXYT(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE, 0);
-        sleep(50);
+      } else {
+        if (i == 0) {
+          for (int j = 0; j < 3; j++) { // beep 3 times upon arriving
+            Sound.beep();
+            sleep(50);
+          }
+        }
+        navigation.roundSearch(map[i][0] * TILE_SIZE, map[i][1] * TILE_SIZE, FULL_TURN, map[i][2]);
       }
-      if (navigation.go_back) {
+
+      if (navigation.get_can) { // If the robot get a can, break
+        localizer(0, navigation, lightlocalizer, odometer);
+        odometer.setXYT(map[i][0] * TILE_SIZE, map[i][1] * TILE_SIZE, 0);
+        sleep(50);
         break;
       }
+      // Localize every 3 tiles
+      if (i % 3 == 0) {
+        localizer(0, navigation, lightlocalizer, odometer);
+        odometer.setXYT(map[i][0] * TILE_SIZE, map[i][1] * TILE_SIZE, 0);
+        sleep(50);
+      }
       i++;
-    }*/
+    }
 
     /* Going back */
-    localizer(0, navigation, lightlocalizer, odometer);
-    odometer.setXYT(fullPath[i][0] * TILE_SIZE, fullPath[i][1] * TILE_SIZE, 0);
-    sleep(50);
     navigation.travelTo(tunnel_points[3][0] * TILE_SIZE, tunnel_points[3][1] * TILE_SIZE);
     localizer(0, navigation, lightlocalizer, odometer);
     odometer.setXYT(tunnel_points[3][0] * TILE_SIZE, tunnel_points[3][1] * TILE_SIZE, 0);
     sleep(50);
     navigation.travelTo(tunnel_points[2][0] * TILE_SIZE, tunnel_points[2][1] * TILE_SIZE);
     navigation.travelTo(tunnel_points[1][0] * TILE_SIZE, tunnel_points[1][1] * TILE_SIZE);
-    Sound.beep();
-    // weightcan.claw_open();
+    switch (corner) {
+      case 0:
+        navigation.travelTo(0.5 * TILE_SIZE, 0.5 * TILE_SIZE);
+        break;
+      case 1:
+        navigation.travelTo(14.5 * TILE_SIZE, 0.5 * TILE_SIZE);
+        break;
+      case 2:
+        navigation.travelTo(14.5 * TILE_SIZE, 8.5 * TILE_SIZE);
+        break;
+      case 3:
+        navigation.travelTo(0.5 * TILE_SIZE, 8.5 * TILE_SIZE);
+        break;
+    }
+    for (int j = 0; j < 5; j++) { // beep 3 times upon arriving
+      Sound.beep();
+      sleep(50);
+    }
+    weightcan.claw_open();
 
     /* Waiting for exit */
     // Wait here forever until button pressed to terminate the robot
@@ -657,6 +631,47 @@ public class FinalProject {
       Thread.sleep(time);
     } catch (Exception e) {
     }
+  }
+  
+  /**
+   * This method implements the generation of search map. The robot will going to adjust the
+   * scanning region of the round search, and its path according to the size of the search zone. The
+   * robot will arrive at each map point and do 360 turn to search the can around it.
+   * 
+   * @param sz_ll_x - The x coordinate of the lower left corner of the search zone
+   * @param sz_ll_y - The y coordinate of the lower left corner of the search zone
+   * @param sz_ur_x - The x coordinate of the upper right corner of the search zone
+   * @param sz_ur_y - The y coordinate of the upper right corner of the search zone
+   * @return the map generated
+   */
+  private static int[][] searchMap(int sz_ll_x, int sz_ll_y, int sz_ur_x, int sz_ur_y) {
+    int horizontal = sz_ur_x - sz_ll_x; // The x nodes that will be traveled
+    int vertical = sz_ur_y - sz_ll_y; // The y nodes that will be traveled
+    int search_region = Math.min(horizontal / 2, vertical / 2);
+    sz_ll_x += search_region;
+    sz_ll_y += search_region;
+    sz_ur_x -= search_region;
+    sz_ur_y -= search_region;
+    horizontal = sz_ur_x - sz_ll_x + 1;
+    vertical = sz_ur_y - sz_ll_y + 1;
+    int[][] fullPath = new int[horizontal * vertical][3]; // Set up a 2D array of map
+    int direction = 1; // Traveling to the right
+    for (int i = 0; i < vertical; i++) {
+      for (int j = 0; j < horizontal; j++) {
+        if (direction == 1) { // Map generation
+          fullPath[i * horizontal + j][0] = sz_ll_x + j;
+          fullPath[i * horizontal + j][1] = sz_ll_y + i;
+        } else {
+          fullPath[i * horizontal + j][0] = sz_ur_x - j;
+          fullPath[i * horizontal + j][1] = sz_ll_y + i;
+        }
+      }
+      direction *= -1; // Traveling to the left
+    }
+    for (int i = 0; i < fullPath.length; i++) {
+      fullPath[i][2] = search_region;
+    }
+    return fullPath;
   }
 
 }

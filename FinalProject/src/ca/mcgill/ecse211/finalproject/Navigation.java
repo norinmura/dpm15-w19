@@ -37,10 +37,6 @@ public class Navigation {
    */
   private static final double APPROACH_CAN = 5; // Get closer to the can
   /**
-   * The length of the robot
-   */
-  private static final double ROBOT_LENGTH = 10; // The length of the robot
-  /**
    * The sound frequency
    */
   private static final int TUNE = 880;
@@ -72,10 +68,6 @@ public class Navigation {
    * The time out for the line correction method
    */
   public static final int TIMER = 20;
-  /**
-   * The fetching rate
-   */
-  private static final long FETCH_PERIOD = 50;
 
   /* PRIVATE FIELDS */
   /**
@@ -198,26 +190,6 @@ public class Navigation {
    * The beeping time
    */
   int sound_time = 0;
-  /**
-   * The can score
-   */
-  int score = 0;
-  /**
-   * Whether to go back to starting corner
-   */
-  boolean go_back = false;
-  /**
-   * How many can is detected
-   */
-  int count_can = 0;
-  /**
-   * The starting time of each fetch sample
-   */
-  long tstart = 0;
-  /**
-   * The ending time of each fetch sampel
-   */
-  long tend = 0;
 
   /**
    * The constructor for the Navigation class
@@ -256,8 +228,7 @@ public class Navigation {
    * exact goal. This method will poll the odometer for information.
    * 
    * <p>
-   * This method cannot be break. Correcting angle and detect can, used for moving the robot to next
-   * rotate detect point.
+   * This method is also detecting can while moving.
    * 
    * @param x - The x coordinate for the next point
    * @param y - The y coordinate for the next point
@@ -282,21 +253,7 @@ public class Navigation {
     rightMotor.rotate(convertDistance(rightRadius, travel), true);
 
     while (leftMotor.isMoving() || rightMotor.isMoving()) { // If the robot is moving
-      correctAngle(x, y); // The third variable is to indicate which method is calling
-                          // correctAngle
       detectCan();
-      if (score > 3 || count_can == 5) {
-        go_back = true;
-        return;
-      }
-      if (get_can) {
-        rotate(FULL_TURN / 2);
-        forward(TILE_SIZE / 3, 0);
-        weightcan.claw_open();
-        back(TILE_SIZE / 3, 0);
-        rotate(FULL_TURN / 2);
-        moveTo(x, y);
-      }
       try {
         Thread.sleep(50);
       } catch (Exception e) {
@@ -314,8 +271,7 @@ public class Navigation {
    * angle when crossing a line
    * 
    * <p>
-   * This method cannot be break. Correcting angle, used for the robot to travel between the
-   * starting zone and the island.
+   * This method cannot be break. Traveling to the destination point with a large speed.
    * 
    * @param x - The x coordinate for the next point
    * @param y - The y coordinate for the next point
@@ -380,9 +336,9 @@ public class Navigation {
    * the color and weight.
    */
   void detectCan() {
+    Sound.beepSequence();
     /* INITIALIZE VARIABLES */
     get_can = false;
-    score = 0;
 
     warning = colorclassification.median_filter();
     if (warning < SCAN_DISTANCE) {
@@ -412,14 +368,9 @@ public class Navigation {
         e.printStackTrace();
       }
       
-      if (colorclassification.color == 5) {
-        sensorMotor.setSpeed(ROTATE_SPEED); // set the scanning speed
-        sensorMotor.rotate(FULL_TURN, true); // The sensor motor will rotate less than 180
-                                             // degree (as we are using a gear)
-        return; // TODO
-      }
-      score = colorclassification.color;
-
+      sensorMotor.setSpeed(ROTATE_SPEED); // set the scanning speed
+      sensorMotor.rotate(FULL_TURN / 2, false); // The sensor motor will rotate less than 180 degree (as we are using a gear)
+      
       Thread weightThread = new Thread(weightcan); // set a new thread to weight the can
       weightThread.start(); // the weighting thread starts
       try {
@@ -429,114 +380,47 @@ public class Navigation {
       }
 
       if (weightcan.heavy) {
-        score *= 2;
         sound_time = 1000; // 1000 ms
       } else {
         sound_time = 500; // 500 ms
       }
 
-      // TODO
       switch (colorclassification.color) {
         case 1: // blue
           Sound.playTone(TUNE, sound_time);
           break;
         case 2: // green
-          Sound.playTone(TUNE, sound_time);
-          Sound.playTone(TUNE, sound_time);
+          for (int i = 0; i < 2; i++) { // beep 3 times upon arriving
+            Sound.playTone(TUNE, sound_time);
+            try {
+              Thread.sleep(200);
+            } catch (Exception e) {
+            }
+          }
           break;
         case 3: // yellow
-          Sound.playTone(TUNE, sound_time);
-          Sound.playTone(TUNE, sound_time);
-          Sound.playTone(TUNE, sound_time);
+          for (int i = 0; i < 3; i++) { // beep 3 times upon arriving
+            Sound.playTone(TUNE, sound_time);
+            try {
+              Thread.sleep(200);
+            } catch (Exception e) {
+            }
+          }
           break;
         case 4: // red
-          Sound.playTone(TUNE, sound_time);
-          Sound.playTone(TUNE, sound_time);
-          Sound.playTone(TUNE, sound_time);
-          Sound.playTone(TUNE, sound_time);
+          for (int i = 0; i < 4; i++) { // beep 3 times upon arriving
+            Sound.playTone(TUNE, sound_time);
+            try {
+              Thread.sleep(200);
+            } catch (Exception e) {
+            }
+          }
           break;
       }
       sensorMotor.setSpeed(ROTATE_SPEED); // set the scanning speed
-      sensorMotor.rotate(FULL_TURN, true); // The sensor motor will rotate less than 180
+      sensorMotor.rotate(FULL_TURN / 2, true); // The sensor motor will rotate less than 180
                                            // degree (as we are using a gear)
-      count_can++;
       get_can = true; // The robot is getting a can
-    }
-  }
-
-  /**
-   * The method implements the dropping can. The robot is able to drop the can when it reaches the
-   * starting zone.
-   */
-  void dropCan() {
-    weightcan.claw_open();
-    back(ROBOT_LENGTH, ROBOT_LENGTH);
-  }
-
-  /**
-   * This method is navigation correction based on two light sensors at the back when either of the
-   * sensor detects a black line, it will stops and wait until the other sensors detects a black
-   * line, so that the robot will restart with a straight position
-   * 
-   * @param x - The x point that will be going to.
-   * @param y - The y point that will be going to.
-   * @param method - The type of the map point (pre-defined in the SearchCan class)
-   */
-  void correctAngle(double x, double y) {
-
-    /* INITIALIZE VARIABLES */
-    boolean key = true;
-    while (key) {
-      tstart = System.currentTimeMillis();
-      if (Math.sqrt(Math.pow((odometer.getXYT()[0] - x), 2)
-          + Math.pow((odometer.getXYT()[1] - y), 2)) < TILE_SIZE / 2) {
-        break;
-      }
-      while (delay < TIMER) { // A small timer, 20 * 50 ms = 1s
-        delay++;
-        try {
-          Thread.sleep(50);
-        } catch (Exception e) {
-        }
-      }
-      line[0] = linecorrection.filter1();
-      line[1] = linecorrection.filter2();
-      if (line[0]) { // If the black line is detected, the robot will stop
-        leftMotor.stop(true);
-      }
-      if (line[1]) {
-        rightMotor.stop(true);
-      }
-      if (!leftMotor.isMoving() && !rightMotor.isMoving()) {
-        key = false;
-        line[0] = false;
-        line[1] = false;
-        leftMotor.stop(true);
-        rightMotor.stop(false);
-        if (odometer.getXYT()[2] < 30 || odometer.getXYT()[2] > 330) {
-          odometer.setTheta(0);
-          odometer.position[2] = Math.toRadians(0);
-        } else if (Math.abs(odometer.getXYT()[2] - 90) < 30) {
-          odometer.setTheta(90);
-          odometer.position[2] = Math.toRadians(90);
-        } else if (Math.abs(odometer.getXYT()[2] - 180) < 30) {
-          odometer.setTheta(180);
-          odometer.position[2] = Math.toRadians(180);
-        } else if (Math.abs(odometer.getXYT()[2] - 270) < 30) {
-          odometer.setTheta(270);
-          odometer.position[2] = Math.toRadians(270);
-        }
-        delay = 0;
-        moveTo(x, y);
-      }
-      tend = System.currentTimeMillis();
-      if (tend - tstart < FETCH_PERIOD) {
-        try {
-          Thread.sleep(FETCH_PERIOD - (tend - tstart));
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        }
-      }
     }
   }
 
@@ -664,7 +548,7 @@ public class Navigation {
       }
 
       if (angles[0] != 0 && angles[1] != 0) {
-        if ((angles[1] - angles[0] < 10) || (angles[1] - angles[0] < -350)) {
+        if ((angles[1] - angles[0] < 5) || (angles[1] - angles[0] < -355)) {
           angles[0] = angles[1] = 0;
           distances[0] = distances[1] = 0;
           continue;
@@ -681,17 +565,8 @@ public class Navigation {
         goTo(distances[2] * 1.5); // Go towards the can
         backTo(x, y);
         // TODO
-        if (score > 3 || count_can == 5) {
-          go_back = true;
-          return;
-        }
         if (get_can) { // If this is a can
-          rotate(FULL_TURN / 2);
-          forward(TILE_SIZE / 3, 0);
-          weightcan.claw_open();
-          back(TILE_SIZE / 3, 0);
-          rotate(FULL_TURN / 2);
-          roundSearch(x, y, end_angle - odometer.getXYT()[2], range);
+          break;
         } else {
           roundSearch(x, y, end_angle - odometer.getXYT()[2], range);
         }
