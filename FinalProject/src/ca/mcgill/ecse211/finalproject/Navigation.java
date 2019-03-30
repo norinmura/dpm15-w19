@@ -336,14 +336,11 @@ public class Navigation {
    * the color and weight.
    */
   void detectCan() {
-    Sound.beepSequence();
     /* INITIALIZE VARIABLES */
     get_can = false;
 
     warning = colorclassification.median_filter();
     if (warning < SCAN_DISTANCE) {
-      Sound.beepSequenceUp();
-
       leftMotor.stop(true);
       rightMotor.stop(false);
 

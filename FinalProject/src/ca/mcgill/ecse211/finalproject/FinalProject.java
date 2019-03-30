@@ -333,7 +333,7 @@ public class FinalProject {
     Thread odoThread = new Thread(odometer);
     odoThread.start();
 
-    /*// Start the thread for us localizer
+    // Start the thread for us localizer
     Thread usThread = new Thread(uslocalizer);
     usThread.start();
     usThread.join();
@@ -343,7 +343,7 @@ public class FinalProject {
     Thread lightThread = new Thread(lightlocalizer);
     lightThread.start();
     lightThread.join();
-    sleep(100);*/
+    sleep(100);
 
     for (int i = 0; i < 3; i++) {
       Sound.beep();
