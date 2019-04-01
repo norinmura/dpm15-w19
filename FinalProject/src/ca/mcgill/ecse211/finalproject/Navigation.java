@@ -19,15 +19,15 @@ public class Navigation {
   /**
    * The forward speed for the robot
    */
-  public static final int FORWARD_SPEED = 170; // The forward speed for the robot
+  public static final int FORWARD_SPEED = 200; // The forward speed for the robot
   /**
    * The run speed for the robot to travel through the tunnel
    */
-  public static final int RUN_SPEED = 220; // The run speed for the robot
+  public static final int RUN_SPEED = 300; // The run speed for the robot
   /**
    * The rotating speed of the robot
    */
-  public static final int ROTATE_SPEED = 140; // The rotation speed for the robot
+  public static final int ROTATE_SPEED = 160; // The rotation speed for the robot
   /**
    * The distance that the robot think there is an object in front of it
    */
@@ -51,15 +51,23 @@ public class Navigation {
   /**
    * The move method speed adjustment
    */
-  public static final int MOVE_ADJ = 40;
+  public static final int MOVE_ADJ = 0;
   /**
    * The rotate method speed adjustment
    */
-  public static final int ROTATE_ADJ = 10;
+  public static final int ROTATE_ADJ = 20;
+  /**
+   * The turn method speed adjustment
+   */
+  public static final int TURN_ADJ = 50;
+  /**
+   * The approach can method speed adjustment
+   */
+  public static final int APPROACH_ADJ = 80;
   /**
    * The back method speed adjustment
    */
-  public static final int BACK_ADJ = 50;
+  public static final int BACK_ADJ = 20;
   /**
    * The maximum power of the claw
    */
@@ -68,6 +76,10 @@ public class Navigation {
    * The time out for the line correction method
    */
   public static final int TIMER = 20;
+  /**
+   * The error allowance of the ultrasonic sensor
+   */
+  public static final int ERROR = 1;
 
   /* PRIVATE FIELDS */
   /**
@@ -344,7 +356,7 @@ public class Navigation {
       leftMotor.stop(true);
       rightMotor.stop(false);
 
-      forward(APPROACH_CAN, 0); // Move close to the can
+      approachCan(APPROACH_CAN); // Move close to the can
 
       Thread classificationThread = new Thread(colorclassification); // set a new thread to scan
                                                                      // the color
@@ -364,10 +376,17 @@ public class Navigation {
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
-      
+
+      if (colorclassification.color == 5) {
+        sensorMotor.setSpeed(ROTATE_SPEED);
+        sensorMotor.rotate(FULL_TURN, false);
+        return;
+      }
+
       sensorMotor.setSpeed(ROTATE_SPEED); // set the scanning speed
-      sensorMotor.rotate(FULL_TURN / 2, false); // The sensor motor will rotate less than 180 degree (as we are using a gear)
-      
+      sensorMotor.rotate(FULL_TURN / 2, false); // The sensor motor will rotate less than 180 degree
+                                                // (as we are using a gear)
+
       Thread weightThread = new Thread(weightcan); // set a new thread to weight the can
       weightThread.start(); // the weighting thread starts
       try {
@@ -416,7 +435,7 @@ public class Navigation {
       }
       sensorMotor.setSpeed(ROTATE_SPEED); // set the scanning speed
       sensorMotor.rotate(FULL_TURN / 2, true); // The sensor motor will rotate less than 180
-                                           // degree (as we are using a gear)
+      // degree (as we are using a gear)
       get_can = true; // The robot is getting a can
     }
   }
@@ -453,6 +472,26 @@ public class Navigation {
     distance = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)); // The travel distance
     leftMotor.setSpeed(FORWARD_SPEED);
     rightMotor.setSpeed(FORWARD_SPEED);
+    leftMotor.rotate(convertDistance(leftRadius, distance), true);
+    rightMotor.rotate(convertDistance(rightRadius, distance), false);
+
+  }
+
+  /**
+   * <p>
+   * This method is the approaching can method of the robot. The robot will forward a certain
+   * distance to approach the can.
+   * 
+   * <p>
+   * This method cannot be break
+   * 
+   * @param x - The x distance the robot should move
+   * @param y - The y distance the robot should move
+   */
+  void approachCan(double distance) {
+
+    leftMotor.setSpeed(FORWARD_SPEED - APPROACH_ADJ);
+    rightMotor.setSpeed(FORWARD_SPEED - APPROACH_ADJ);
     leftMotor.rotate(convertDistance(leftRadius, distance), true);
     rightMotor.rotate(convertDistance(rightRadius, distance), false);
 
@@ -535,12 +574,10 @@ public class Navigation {
       round_detect = colorclassification.median_filter();
       if (angles[0] == 0 && round_detect <= range * TILE_SIZE) {
         angles[0] = odometer.getXYT()[2];
-        System.out.println("angles[0] = " + angles[0]);
         distances[0] = round_detect;
       }
       if (angles[0] != 0 && round_detect > distances[0]) {
         angles[1] = odometer.getXYT()[2];
-        System.out.println("angles[1] = " + angles[1]);
         distances[1] = round_detect;
       }
 
@@ -551,13 +588,18 @@ public class Navigation {
           continue;
         }
         // Stop the motors and calculate the angle and distance of the can
-        leftMotor.stop(true);
-        rightMotor.stop(false);
         angles[2] = (angles[0] + angles[1]) / 2;
         if (angles[2] >= FULL_TURN) {
           angles[2] -= FULL_TURN;
         }
         distances[2] = (distances[0] + distances[1]) / 2;
+        if (!inWall(distances[2], angles[2])) {
+          angles[0] = angles[1] = 0;
+          distances[0] = distances[1] = 0;
+          continue;
+        }
+        leftMotor.stop(true);
+        rightMotor.stop(false);
         turnTo(angles[2]); // Turn towards the can
         goTo(distances[2] * 1.5); // Go towards the can
         backTo(x, y);
@@ -570,6 +612,27 @@ public class Navigation {
       }
     }
 
+  }
+
+  /**
+   * This method will return true for the destination within the wall, false for the destination is
+   * out of the wall, so that the robot will not start traveling
+   * 
+   * @param distance - The distance the robot will travel
+   * @param angle - The angle of the robot when it begin travel
+   * @return if the destination is within the wall
+   */
+  boolean inWall(double distance, double angle) {
+    double x = odometer.getXYT()[0];
+    double y = odometer.getXYT()[1];
+    double dx = distance * Math.sin(Math.toRadians(angle));
+    double dy = distance * Math.cos(Math.toRadians(angle));
+    if (x + dx > (15 * TILE_SIZE - ERROR) || x + dx < (0 * TILE_SIZE + ERROR)
+        || y + dy > (9 * TILE_SIZE - ERROR) || y + dy < (0 * TILE_SIZE + ERROR)) {
+      return false;
+    } else {
+      return true;
+    }
   }
 
   /**
@@ -614,8 +677,8 @@ public class Navigation {
    */
   void turn(double theta) {
 
-    leftMotor.setSpeed(ROTATE_SPEED + 50);
-    rightMotor.setSpeed(ROTATE_SPEED + 50);
+    leftMotor.setSpeed(ROTATE_SPEED + TURN_ADJ);
+    rightMotor.setSpeed(ROTATE_SPEED + TURN_ADJ);
 
     leftMotor.rotate(convertAngle(leftRadius, track, theta), true);
     rightMotor.rotate(-convertAngle(rightRadius, track, theta), true); // The true is to ensure the
