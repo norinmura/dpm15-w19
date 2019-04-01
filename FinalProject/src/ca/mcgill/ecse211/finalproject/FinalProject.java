@@ -445,6 +445,9 @@ public class FinalProject {
       sleep(50);
     }
     weightcan.claw_open();
+    sensorMotor.setSpeed(FULL_TURN / 2); // set the scanning speed
+    sensorMotor.rotate(FULL_TURN / 2, false); // The sensor motor will rotate less than 180 degree
+                                              // (as we are using a gear)
 
     /* Waiting for exit */
     // Wait here forever until button pressed to terminate the robot

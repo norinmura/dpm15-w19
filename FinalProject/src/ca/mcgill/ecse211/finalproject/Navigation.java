@@ -31,11 +31,11 @@ public class Navigation {
   /**
    * The distance that the robot think there is an object in front of it
    */
-  private static final double SCAN_DISTANCE = 7; // The detect a can distance
+  private static final double SCAN_DISTANCE = 6; // The detect a can distance
   /**
    * The distance that the robot move to go closer to the can
    */
-  private static final double APPROACH_CAN = 5; // Get closer to the can
+  private static final double APPROACH_CAN = 6; // Get closer to the can
   /**
    * The sound frequency
    */
@@ -358,6 +358,7 @@ public class Navigation {
 
       approachCan(APPROACH_CAN); // Move close to the can
 
+      /* Detect the color */
       Thread classificationThread = new Thread(colorclassification); // set a new thread to scan
                                                                      // the color
       classificationThread.start(); // the color scanning thread starts
@@ -376,17 +377,17 @@ public class Navigation {
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
-
-      if (colorclassification.color == 5) {
+      int can_color = colorclassification.color;
+      if (can_color == 5) {
         sensorMotor.setSpeed(ROTATE_SPEED);
         sensorMotor.rotate(FULL_TURN, false);
         return;
       }
 
+      /* Start Weighting */
       sensorMotor.setSpeed(ROTATE_SPEED); // set the scanning speed
       sensorMotor.rotate(FULL_TURN / 2, false); // The sensor motor will rotate less than 180 degree
                                                 // (as we are using a gear)
-
       Thread weightThread = new Thread(weightcan); // set a new thread to weight the can
       weightThread.start(); // the weighting thread starts
       try {
@@ -395,13 +396,45 @@ public class Navigation {
         e.printStackTrace();
       }
 
+      sensorMotor.setSpeed(ROTATE_SPEED); // set the scanning speed
+      sensorMotor.rotate(FULL_TURN / 2, false); // The sensor motor will rotate less than 180 degree
+                                                // (as we are using a gear)
+      Thread retryThread = new Thread(colorclassification); // set a new thread to scan
+      // the color
+      retryThread.start(); // the color scanning thread starts
+      sensorMotor.setSpeed(ROTATE_SPEED / 2); // set the scanning speed
+      sensorMotor.rotate(-FULL_TURN, true); // The sensor motor will rotate less than 180 degree
+      // (as we are using a gear)
+      while (sensorMotor.isMoving()) { // Wait for the sensor to stop
+        try {
+          Thread.sleep(50);
+        } catch (Exception e) {
+        }
+      }
+      colorclassification.stop = true; // scan is done
+      try {
+        retryThread.join();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+      if (colorclassification.color == 5) {
+        sensorMotor.setSpeed(ROTATE_SPEED);
+        sensorMotor.rotate(FULL_TURN, false);
+        weightcan.claw_open();
+        return;
+      }
+
+      sensorMotor.setSpeed(ROTATE_SPEED); // set the scanning speed
+      sensorMotor.rotate(FULL_TURN / 2, false); // The sensor motor will rotate less than 180 degree
+                                                // (as we are using a gear)
+
       if (weightcan.heavy) {
         sound_time = 1000; // 1000 ms
       } else {
         sound_time = 500; // 500 ms
       }
 
-      switch (colorclassification.color) {
+      switch (can_color) {
         case 1: // blue
           Sound.playTone(TUNE, sound_time);
           break;
@@ -433,9 +466,6 @@ public class Navigation {
           }
           break;
       }
-      sensorMotor.setSpeed(ROTATE_SPEED); // set the scanning speed
-      sensorMotor.rotate(FULL_TURN / 2, true); // The sensor motor will rotate less than 180
-      // degree (as we are using a gear)
       get_can = true; // The robot is getting a can
     }
   }
