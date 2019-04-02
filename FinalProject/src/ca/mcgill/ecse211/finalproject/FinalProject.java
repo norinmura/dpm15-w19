@@ -726,7 +726,7 @@ public class FinalProject {
    * on the corner of which the robot performs the localization.
    * 
    * @param corner
-   * @return int[] location
+   * @return int[] location of the starting grid
    */
   private static int[] getStartingXY(int corner) {
     int[] location = {-1, -1};
@@ -761,6 +761,12 @@ public class FinalProject {
    * cases. This method is called for the edge cases when tunnels are located at the same
    * x-coordinate as robot's starting point.
    * 
+   * @param points[][] - The points generated for the tunnel before tweaking
+   * @param tn_ll_x - x coordinate of lower left corner of tunnel
+   * @param tn_ll_y - y coordinate of lower left corner of tunnel
+   * @param tn_ur_x - x coordinate of upper right corner of tunnel
+   * @param tn_ur_y - y coordinate of upper right corner of tunnel
+   * 
    * @return modified points[][]
    */
   private static double[][] TweakPointsEdgeCaseX(double[][] points, int[] cornerXY, int tn_ll_x,
@@ -771,20 +777,28 @@ public class FinalProject {
         pointsNew[0][0] = 0.5;
         pointsNew[0][1] = tn_ll_y;
         pointsNew[1][0] = 0.5;
+        pointsNew[2][0] = tn_ur_x + 1;
+        pointsNew[3][0] = tn_ur_x + 1;
       } else if (cornerXY[1] > tn_ur_y) { // from above
         pointsNew[0][0] = 0.5;
         pointsNew[0][1] = tn_ur_y;
         pointsNew[1][0] = 0.5;
+        pointsNew[2][0] = tn_ur_x + 1;
+        pointsNew[3][0] = tn_ur_x + 1;
       }
     } else if (tn_ur_x == 14) { // it's approaching from right
       if (cornerXY[1] < tn_ll_y) { // from below
         pointsNew[0][0] = 14.5;
         pointsNew[0][1] = tn_ll_y;
         pointsNew[1][0] = 14.5;
+        pointsNew[2][0] = tn_ll_x - 1;
+        pointsNew[3][0] = tn_ll_x - 1;
       } else if (cornerXY[1] > tn_ur_y) { // from above
         pointsNew[0][0] = 14.5;
         pointsNew[0][1] = tn_ur_y;
         pointsNew[1][0] = 14.5;
+        pointsNew[2][0] = tn_ll_x - 1;
+        pointsNew[3][0] = tn_ll_x - 1;
       }
     }
     return pointsNew;
@@ -794,6 +808,12 @@ public class FinalProject {
    * This method will take in the points generated in getPoints() and modify it to support the edge
    * cases. This method is called for the edge cases when tunnels are located at the same
    * y-coordinate as robot's starting point.
+   * 
+   * @param points[][] - The points generated for the tunnel before tweaking
+   * @param tn_ll_x - x coordinate of lower left corner of tunnel
+   * @param tn_ll_y - y coordinate of lower left corner of tunnel
+   * @param tn_ur_x - x coordinate of upper right corner of tunnel
+   * @param tn_ur_y - y coordinate of upper right corner of tunnel
    * 
    * @return modified points[][]
    */
@@ -805,20 +825,28 @@ public class FinalProject {
         pointsNew[0][0] = tn_ll_x;
         pointsNew[0][1] = 0.5;
         pointsNew[1][1] = 0.5;
+        pointsNew[2][1] = tn_ur_y + 1;
+        pointsNew[3][1] = tn_ur_y + 1;
       } else if (cornerXY[0] > tn_ur_x) { // from right
         pointsNew[0][0] = tn_ur_x;
         pointsNew[0][1] = 0.5;
         pointsNew[1][1] = 0.5;
+        pointsNew[2][1] = tn_ur_y + 1;
+        pointsNew[3][1] = tn_ur_y + 1;
       }
-    } else if (tn_ur_y == 14) { // it's approaching from above
+    } else if (tn_ur_y == 8) { // it's approaching from above
       if (cornerXY[0] < tn_ll_x) { // from left
         pointsNew[0][0] = tn_ll_x;
-        pointsNew[0][1] = 14.5;
-        pointsNew[1][1] = 14.5;
+        pointsNew[0][1] = 8.5;
+        pointsNew[1][1] = 8.5;
+        pointsNew[2][1] = tn_ll_y - 1;
+        pointsNew[3][1] = tn_ll_y - 1;
       } else if (cornerXY[0] > tn_ur_x) { // from right
         pointsNew[0][0] = tn_ur_x;
-        pointsNew[0][1] = 14.5;
-        pointsNew[1][1] = 14.5;
+        pointsNew[0][1] = 8.5;
+        pointsNew[1][1] = 8.5;
+        pointsNew[2][1] = tn_ll_y - 1;
+        pointsNew[3][1] = tn_ll_y - 1;
       }
     }
     return pointsNew;
@@ -826,13 +854,15 @@ public class FinalProject {
 
   /**
    * This method helps to determine if the robot should re-localize before getting into the tunnel.
-   * First identifies the current robot's position (x,y) based on the given corner. Then, returns
-   * boolean value based on conditions: if (points[0][0], points[0][1]) == (currentX, currentY)
-   * return false, return true otherwise.
+   * First identifies the current robot's position (x,y) based on the given corner. Then, whether it
+   * is an edge case.
    * 
    * @param corner - the starting corner of the robot
-   * @param points - double[][] points returned from TweakPointsEdgeCaseX() or getPoints()
-   * @return boolean
+   * @param tn_ll_x - x coordinate of lower left corner of tunnel
+   * @param tn_ll_y - y coordinate of lower left corner of tunnel
+   * @param tn_ur_x - x coordinate of upper right corner of tunnel
+   * @param tn_ur_y - y coordinate of upper right corner of tunnel
+   * @return boolean if it is an edge case (not localize before tunnel)
    */
   private static boolean relocalizeBeforeTunnel(int[] cornerXY, int tn_ll_x, int tn_ll_y,
       int tn_ur_x, int tn_ur_y) {
@@ -851,11 +881,11 @@ public class FinalProject {
   /**
    * This method returns true if the tunnel is placed horizontal
    * 
-   * @param tn_ll_x
-   * @param tn_ll_y
-   * @param tn_ur_x
-   * @param tn_ur_y
-   * @return
+   * @param tn_ll_x - x coordinate of lower left corner of tunnel
+   * @param tn_ll_y - y coordinate of lower left corner of tunnel
+   * @param tn_ur_x - x coordinate of upper right corner of tunnel
+   * @param tn_ur_y - y coordinate of upper right corner of tunnel
+   * @return if the tunnel is horizontally placed
    */
   private static boolean isTunnelHorizontal(int tn_ll_x, int tn_ll_y, int tn_ur_x, int tn_ur_y) {
     boolean orientation = (tn_ur_x - tn_ll_x) > (tn_ur_y - tn_ll_y);
