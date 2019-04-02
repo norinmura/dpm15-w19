@@ -333,7 +333,6 @@ public class FinalProject {
     Thread odoThread = new Thread(odometer);
     odoThread.start();
 
-    
     // Start the thread for us localizer
     Thread usThread = new Thread(uslocalizer);
     usThread.start();
@@ -345,13 +344,12 @@ public class FinalProject {
     lightThread.start();
     lightThread.join();
     sleep(100);
-    
 
     for (int i = 0; i < 3; i++) {
       Sound.beep();
       sleep(50);
     }
-    
+
     /* Travel through tunnel */
     double[][] tunnel_points = getPoints(corner, tn_ll_x, tn_ll_y, tn_ur_x, tn_ur_y);
     sleep(50);
@@ -387,7 +385,6 @@ public class FinalProject {
 
     // Travel to the center of the tunnel, go through the tunnel, find another nearest point, then
     // localize.
-
     navigation.travelTo(tunnel_points[1][0] * TILE_SIZE, tunnel_points[1][1] * TILE_SIZE);
     navigation.travelTo(tunnel_points[2][0] * TILE_SIZE, tunnel_points[2][1] * TILE_SIZE);
 
@@ -395,7 +392,6 @@ public class FinalProject {
     localizer(0, navigation, lightlocalizer, odometer);
     odometer.setXYT(tunnel_points[3][0] * TILE_SIZE, tunnel_points[3][1] * TILE_SIZE, 0);
     sleep(50);
-    
 
     /* Traverse the search map and navigate */
     // Traveling to island and iterating the map
@@ -723,111 +719,6 @@ public class FinalProject {
       fullPath[i][2] = search_region;
     }
     return fullPath;
-  }
-  
-  /**
-   * This method will return the real (x,y) coordinate of the robot after localization. 
-   * It depends on the corner of which the robot performs the localization. 
-   * 
-   * @param corner
-   * @return int[] location
-   */
-  private static int[] getStartingXY (int corner) {
-    int[] location = {-1,-1};
-    
-    switch (corner) {
-      case 0:
-        location[0] = 1;
-        location[1] = 1;
-        break;
-      case 1:
-        location[0] = 14;
-        location[1] = 1;
-        break;
-      case 2:
-        location[0] = 14;
-        location[1] = 8;
-        break;
-      case 3:
-        location[0] = 1;
-        location[1] = 8;
-        break;
-      default:
-        location[0] = -1;
-        location[1] = -1;
-        break;
-    }
-    
-    return location;
-  }
-  
-  
-  /**
-   * This method will take in the points generated in getPoints() and modify it to support the edge cases. 
-   * This method is called for the edge cases when tunnels are located at the same x-coordinate as robot's starting point. 
-   * 
-   * Assumption is that this method is called only when the tunnels are placed horizontally. 
-   * If it's vertical, ignore. 
-   * If it's horizontal, determine if the robot is approaching from left or right. 
-   *    Then, if it's from left: 
-   *       points[0][0] should be increased by 1
-   *       points[0][1] should be decreased by 1
-   *       points[1][0] should be increased by 0.5
-   *       points[1][1] should be the same. 
-   *    if it's from right: 
-   *       points[0][0] should be decreased by 1
-   *       points[0][1] should be decreased by 1
-   *       points[1][0] should be decreased by 0.5
-   *       points[1][1] should be the same. 
-   * Finally, return the modified array. 
-   *  
-   * @return modified points[][]
-   */
-  private static double[][] TweakPointsEdgeCaseX (double[][] points, int[] cornerXY) {
-    double[][] pointsNew = points;
-    if (cornerXY[0] < points[2][0]) {   // it's approaching from left      
-      pointsNew[0][0] = points[0][0] +1;
-      pointsNew[0][1] = points[0][1] - 1;
-      pointsNew[1][0] = pointsNew[1][0] + 0.5;      
-    } else if (cornerXY[0] > points[2][0]) {    // it's approaching from right      
-      pointsNew[0][1] = points[0][1] - 1;
-      pointsNew[1][0] = points[1][0] + 0.5;
-    }
-    return pointsNew;
-  }
-  
-  /**
-   * This method helps to determine if the robot should re-localize before getting into the tunnel. 
-   * First identifies the current robot's position (x,y) based on the given corner. 
-   * Then, returns boolean value based on conditions: 
-   * if (points[0][0], points[0][1]) == (currentX, currentY) return false, return true otherwise. 
-   * 
-   * @param corner - the starting corner of the robot
-   * @param points - double[][] points returned from TweakPointsEdgeCaseX() or getPoints()
-   * @return boolean
-   */
-  private static boolean relocalizeBeforeTunnel (int corner, double[][] points) {
-    int[] cornerXY = getStartingXY(corner);
-    if (cornerXY[0] == points[0][0] && cornerXY[1] == points [0][1]) {
-      return false;
-    }
-    
-    return true; 
-  }
-  
-  /**
-   * This method returns true if the tunnel is placed horizontal
-   * @param tn_ll_x
-   * @param tn_ll_y
-   * @param tn_ur_x
-   * @param tn_ur_y
-   * @return
-   */
-  private static boolean isTunnelHorizontal (int tn_ll_x, int tn_ll_y, int tn_ur_x,
-      int tn_ur_y) {
-    boolean orientation = (tn_ur_x - tn_ll_x) > (tn_ur_y - tn_ll_y);
-    
-    return orientation;
   }
 
   /**
