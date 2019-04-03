@@ -441,16 +441,30 @@ public class FinalProject {
     odometer.setXYT(tunnel_points[3][0] * TILE_SIZE, tunnel_points[3][1] * TILE_SIZE, 0);
     sleep(50);
 
+ // Praying the god thread doesn't crash
+    sleep(50);
+    
     // Travel to the entrance of the tunnel
     navigation.travelTo(tunnel_points[2][0] * TILE_SIZE, tunnel_points[2][1] * TILE_SIZE);
+    
+ // Praying the god thread doesn't crash
+    sleep(50);
 
     // Travel to the other end of the tunnel
     navigation.travelTo(tunnel_points[1][0] * TILE_SIZE, tunnel_points[1][1] * TILE_SIZE);
 
+ // Praying the god thread doesn't crash
+    sleep(50);
+    
     // Travel to the nearest point to the exit of the tunnel and localize, but only if robot is not
     // already at the starting pt.
     navigation.travelTo(tunnel_points[0][0] * TILE_SIZE, tunnel_points[0][1] * TILE_SIZE);
+ // Praying the god thread doesn't crash
+    sleep(50);
+    
     if (relocalizeBeforeTunnel(lastloc, tn_ll_x, tn_ll_y, tn_ur_x, tn_ur_y)) {
+   // Praying the god thread doesn't crash
+      sleep(50);
       localizer(0, navigation, lightlocalizer, odometer);
       odometer.setXYT(tunnel_points[0][0] * TILE_SIZE, tunnel_points[0][1] * TILE_SIZE, 0);
       sleep(50);
@@ -458,6 +472,8 @@ public class FinalProject {
 
     if (tunnel_points[4][0] != -1 || tunnel_points[4][1] != -1) {
       navigation.travelTo(tunnel_points[4][0] * TILE_SIZE, tunnel_points[4][1] * TILE_SIZE);
+   // Praying the god thread doesn't crash
+      sleep(50);
       localizer(0, navigation, lightlocalizer, odometer);
       odometer.setXYT(tunnel_points[4][0] * TILE_SIZE, tunnel_points[4][1] * TILE_SIZE, 0);
       sleep(50);
