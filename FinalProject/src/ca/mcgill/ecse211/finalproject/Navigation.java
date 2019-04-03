@@ -396,38 +396,6 @@ public class Navigation {
         e.printStackTrace();
       }
 
-      sensorMotor.setSpeed(ROTATE_SPEED); // set the scanning speed
-      sensorMotor.rotate(FULL_TURN / 2, false); // The sensor motor will rotate less than 180 degree
-                                                // (as we are using a gear)
-      Thread retryThread = new Thread(colorclassification); // set a new thread to scan
-      // the color
-      retryThread.start(); // the color scanning thread starts
-      sensorMotor.setSpeed(ROTATE_SPEED / 2); // set the scanning speed
-      sensorMotor.rotate(-FULL_TURN, true); // The sensor motor will rotate less than 180 degree
-      // (as we are using a gear)
-      while (sensorMotor.isMoving()) { // Wait for the sensor to stop
-        try {
-          Thread.sleep(50);
-        } catch (Exception e) {
-        }
-      }
-      colorclassification.stop = true; // scan is done
-      try {
-        retryThread.join();
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-      if (colorclassification.color == 5) {
-        sensorMotor.setSpeed(ROTATE_SPEED);
-        sensorMotor.rotate(FULL_TURN, false);
-        weightcan.claw_open();
-        return;
-      }
-
-      sensorMotor.setSpeed(ROTATE_SPEED); // set the scanning speed
-      sensorMotor.rotate(FULL_TURN / 2, false); // The sensor motor will rotate less than 180 degree
-                                                // (as we are using a gear)
-
       if (weightcan.heavy) {
         sound_time = 1000; // 1000 ms
       } else {

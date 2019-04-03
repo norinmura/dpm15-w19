@@ -79,7 +79,7 @@ public class FinalProject {
    * The IP address of the server
    */
 
-  private static final String SERVER_IP = "192.168.2.11";
+  private static final String SERVER_IP = "192.168.2.19";
 
   /**
    * The team number of the user

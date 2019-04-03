@@ -45,7 +45,7 @@ public class WeightCan implements Runnable {
   /**
    * The comparison interval
    */
-  private static final int INTERVAL = 85;
+  private static final int INTERVAL = 83;
 
   /* Fields */
   /**
@@ -90,6 +90,8 @@ public class WeightCan implements Runnable {
     } else {
       heavy = false;
     }
+    
+    weightMotor.setPower(MAX_POWER);
   }
 
   /**
