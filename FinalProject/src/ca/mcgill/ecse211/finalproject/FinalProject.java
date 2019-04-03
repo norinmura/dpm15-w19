@@ -431,6 +431,9 @@ public class FinalProject {
       i++;
     }
 
+    // Praying the god thread doesn't crash
+    sleep(50);
+    
     /* Going back */
     // Navigate to the nearest point to the tunnel and localize
     navigation.travelTo(tunnel_points[3][0] * TILE_SIZE, tunnel_points[3][1] * TILE_SIZE);
@@ -653,17 +656,45 @@ public class FinalProject {
   private static void localizer(double angle, Navigation navigation, LightLocalizer lightlocalizer,
       Odometer odometer) {
     sleep(50);
-    navigation.turnTo(angle);
+    navigation.turnTo(angle);   
+
+    // Praying the god thread doesn't crash
+    sleep(50);
+    
     navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer
-                                // reading
+                                // reading    
     lightlocalizer.correctAngle(); // when a line is detected, correct angle
+    
+    // Praying the god thread doesn't crash
+    sleep(50);
+    
     navigation.back(0, BACK_DIST); // Go back the offset distance between the wheels and sensors
+    
+    // Praying the god thread doesn't crash
+    sleep(50);
+    
     navigation.rotate(FULL_TURN / 4);
+    
+    // Praying the god thread doesn't crash
+    sleep(50);
+    
     navigation.move(TILE_SIZE); // move forward (until you detect a line) to correct Y odometer
                                 // reading
     lightlocalizer.correctAngle(); // when a line is detected, correct angle
+    
+    // Praying the god thread doesn't crash
+    sleep(50);
+    
     navigation.back(0, BACK_DIST); // Go back the offset distance between the wheels and sensors
+    
+    // Praying the god thread doesn't crash
+    sleep(50);
+    
     navigation.rotate(-FULL_TURN / 4);
+    
+    // Praying the god thread doesn't crash
+    sleep(50);
+    
     odometer.position[2] = Math.toRadians(angle);
     sleep(50);
   }
