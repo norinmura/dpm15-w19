@@ -79,7 +79,7 @@ public class Navigation {
   /**
    * The error allowance of the ultrasonic sensor
    */
-  public static final int ERROR = 1;
+  public static final int ERROR = 10;
 
   /* PRIVATE FIELDS */
   /**
