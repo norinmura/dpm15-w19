@@ -35,7 +35,7 @@ public class Navigation {
   /**
    * The distance that the robot move to go closer to the can
    */
-  private static final double APPROACH_CAN = 6; // Get closer to the can
+  private static final double APPROACH_CAN = 8; // Get closer to the can
   /**
    * The sound frequency
    */
