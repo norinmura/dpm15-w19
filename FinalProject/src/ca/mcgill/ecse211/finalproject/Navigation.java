@@ -601,7 +601,6 @@ public class Navigation {
         turnTo(angles[2]); // Turn towards the can
         goTo(distances[2] * 1.5); // Go towards the can
         backTo(x, y);
-        // TODO
         if (get_can) { // If this is a can
           break;
         } else {
