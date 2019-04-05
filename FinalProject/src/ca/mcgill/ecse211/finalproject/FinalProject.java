@@ -23,34 +23,42 @@ import lejos.robotics.SampleProvider;
  * the constant field, the user should change, before running the program, first, the SERVER_IP
  * according to the IP address of his/her own computer; second, the TEAM_NUMBER to the user team
  * number. The static constant field of this class also contains the parameters of the robot (wheel
- * radius and track width).
+ * radius and track width). The program will control the robot to complete the following tasks:
+ * localize at corner, navigate through tunnel, arrive at search zone and search for cans, identify
+ * the color and weight the cans, bring the can back to the starting corner and stop (see Software
+ * Document section 2.0).
  * 
  * <p>
- * For this version, the robot will start at an unknown corner 0, 1, 2, or 3 (the lower left corner
- * of the board is the (0, 0) coordinate). The Wi-Fi connection that connects the robot with the
- * server using Wi-Fi, will obtain data from the server. The Wi-Fi connection is implemented by
- * importing and building path to a helper class. Using the if/else statement, the robot will only
- * store the useful data and exit the program if there is error in the server input or Wi-Fi
- * connection. After obtaining all the essential parameters, it will start to initialize all the
+ * The visualized flow of the program is explained in Software Document section 10.0. For this
+ * version, the robot will start at an unknown corner 0, 1, 2, or 3 (the lower left corner of the
+ * board is the (0, 0) coordinate). At the beginning, the robot will start to initialize all the
  * sensors (two color sensor to RED mode, one color sensor to RGB mode and the ultrasonic sensor to
  * distance mode), and create the instances for the program (odometer, display, weight can, line
- * correction, navigation, ultrasoinc localizer and light localizer). The x, y, theta coordinate of
- * the robot is: x - horizontal axis, y - vertical axis, theta - clockwise angle, (0, 0, 0) as the
- * lower left corner of the board and facing towards positive y. The Odometer class keep track of
- * the position (x, y, and theta) of the robot, with x, y and theta initialized according to the
- * result of the localization and the starting corner. The ColorClassification class will detect the
- * color of the can (fetching R, G, B sample using the RGB mode) and identify the color (comparing
- * the reading with the standardized default value of each color, i.e., blue, green, yellow and
- * red); the color sensor carried by the arm (rotates 180 degrees), so the color sensor will keep
- * detecting the color while the arm is moving, and finally return the color that is detected most.
- * The WeightCan class contains the control of the claw of the robot, including the lifting and
- * dropping can, and weight detection. The LineCorrection class contains two differential filter
- * method for the two color sensor in RED mode for line detection. The Navigation class contains the
- * control of the motion of the robot (turning, traveling and angle correction), it will also call
- * ColorClassification and WeightCan class and run them in threads. The UltrasonicLocalizer class is
- * able to localize the orientation (angle) of the robot and the LightLocalizer class will localize
- * the localization and the orientation (angle) of the robot, and reset the coordinates according to
- * the starting corner.
+ * correction, navigation, ultrasoinc localizer and light localizer). After initialization, The
+ * Wi-Fi connection that connects the robot with the server using Wi-Fi, will obtain data from the
+ * server. The Wi-Fi connection is implemented by importing and building path to a helper class.
+ * Using the if/else statement, the robot will only store the useful data and exit the program if
+ * there is error in the server input or Wi-Fi connection (see Software Document section 9.0). The
+ * x, y, theta coordinate of the robot is: x - horizontal axis, y - vertical axis, theta - clockwise
+ * angle, (0, 0, 0) as the lower left corner of the board and facing towards positive y.
+ * 
+ * <p>
+ * The Odometer class keep track of the position (x, y, and theta) of the robot, with x, y and theta
+ * initialized according to the result of the localization and the starting corner (see Software
+ * Document section 3.0). The ColorClassification class will detect the color of the can (fetching
+ * R, G, B sample using the RGB mode) and identify the color (comparing the reading with the
+ * standardized default value of each color, i.e., blue, green, yellow and red); the color sensor
+ * carried by the arm (rotates 180 degrees), so the color sensor will keep detecting the color while
+ * the arm is moving, and finally return the color that is detected most (see Software Document
+ * section 6.0). The WeightCan class contains the control of the claw of the robot, including the
+ * lifting and dropping can, and weight detection (see Software Document section 7.0). The
+ * LineCorrection class contains two differential filter method for the two color sensor in RED mode
+ * for line detection. The Navigation class contains the control of the motion of the robot
+ * (turning, traveling and angle correction), it will also call ColorClassification and WeightCan
+ * class and run them in threads (see Software Document section 4.0). The UltrasonicLocalizer class
+ * is able to localize the orientation (angle) of the robot and the LightLocalizer class will
+ * localize the localization and the orientation (angle) of the robot, and reset the coordinates
+ * according to the starting corner (see Software Document section 5.0).
  * 
  * <p>
  * After initialing all the instances, the main method will start the thread for odometer, and
@@ -67,7 +75,8 @@ import lejos.robotics.SampleProvider;
  * specified color (search path is following the generated map). The robot will arrive at each map
  * point, turn to find the cans around it, go approach the can, detect the can and identify its
  * color, and beeps if the target color is found. Before termination, the robot will be navigated to
- * the upper right corner of the search region.
+ * the upper right corner of the search region. (The flowchart and thread map are in Software
+ * Document section 10.0).
  * 
  * @author Floria Peng
  */
@@ -375,8 +384,10 @@ public class FinalProject {
             TweakPointsEdgeCaseY(tunnel_points, lastloc, tn_ll_x, tn_ll_y, tn_ur_x, tn_ur_y);
       }
     }
+    sleep(50);
     // Travel to the nearest point to the tunnel and re-localize, only if robot not already there
     navigation.travelTo(tunnel_points[0][0] * TILE_SIZE, tunnel_points[0][1] * TILE_SIZE);
+    sleep(50);
     if (relocalizeBeforeTunnel(lastloc, tn_ll_x, tn_ll_y, tn_ur_x, tn_ur_y)) {
       localizer(0, navigation, lightlocalizer, odometer);
       odometer.setXYT(tunnel_points[0][0] * TILE_SIZE, tunnel_points[0][1] * TILE_SIZE, 0);
@@ -386,7 +397,9 @@ public class FinalProject {
     // Travel to the center of the tunnel, go through the tunnel, find another nearest point, then
     // localize.
     navigation.travelTo(tunnel_points[1][0] * TILE_SIZE, tunnel_points[1][1] * TILE_SIZE);
+    sleep(50);
     navigation.travelTo(tunnel_points[2][0] * TILE_SIZE, tunnel_points[2][1] * TILE_SIZE);
+    sleep(50);
 
     navigation.travelTo(tunnel_points[3][0] * TILE_SIZE, tunnel_points[3][1] * TILE_SIZE);
     localizer(0, navigation, lightlocalizer, odometer);
@@ -399,8 +412,10 @@ public class FinalProject {
     int i = 0;
     while (i < map.length) {
       navigation.moveTo(map[i][0] * TILE_SIZE, map[i][1] * TILE_SIZE);
+      sleep(50);
       if (navigation.get_can) {
         navigation.travelTo(map[i][0] * TILE_SIZE, map[i][1] * TILE_SIZE);
+        sleep(50);
         if (i == 0) {
           for (int j = 0; j < 3; j++) { // beep 3 times upon arriving
             Sound.beep();
@@ -421,6 +436,7 @@ public class FinalProject {
           sleep(50);
         }
         navigation.roundSearch(map[i][0] * TILE_SIZE, map[i][1] * TILE_SIZE, FULL_TURN, map[i][2]);
+        sleep(50);
       }
       if (navigation.get_can) { // If the robot get a can, break
         localizer(0, navigation, lightlocalizer, odometer);
@@ -429,6 +445,7 @@ public class FinalProject {
         break;
       }
       i++;
+      sleep(50);
     }
 
     // Praying the god thread doesn't crash
@@ -443,13 +460,16 @@ public class FinalProject {
 
     // Travel to the entrance of the tunnel
     navigation.travelTo(tunnel_points[2][0] * TILE_SIZE, tunnel_points[2][1] * TILE_SIZE);
+    sleep(50);
 
     // Travel to the other end of the tunnel
     navigation.travelTo(tunnel_points[1][0] * TILE_SIZE, tunnel_points[1][1] * TILE_SIZE);
+    sleep(50);
 
     // Travel to the nearest point to the exit of the tunnel and localize, but only if robot is not
     // already at the starting pt.
     navigation.travelTo(tunnel_points[0][0] * TILE_SIZE, tunnel_points[0][1] * TILE_SIZE);
+    sleep(50);
     if (relocalizeBeforeTunnel(lastloc, tn_ll_x, tn_ll_y, tn_ur_x, tn_ur_y)) {
       localizer(0, navigation, lightlocalizer, odometer);
       odometer.setXYT(tunnel_points[0][0] * TILE_SIZE, tunnel_points[0][1] * TILE_SIZE, 0);
@@ -466,15 +486,19 @@ public class FinalProject {
     switch (corner) {
       case 0:
         navigation.travelTo(0.5 * TILE_SIZE, 0.5 * TILE_SIZE);
+        sleep(50);
         break;
       case 1:
         navigation.travelTo(14.5 * TILE_SIZE, 0.5 * TILE_SIZE);
+        sleep(50);
         break;
       case 2:
         navigation.travelTo(14.5 * TILE_SIZE, 8.5 * TILE_SIZE);
+        sleep(50);
         break;
       case 3:
         navigation.travelTo(0.5 * TILE_SIZE, 8.5 * TILE_SIZE);
+        sleep(50);
         break;
     }
     for (int j = 0; j < 5; j++) { // beep 3 times upon arriving

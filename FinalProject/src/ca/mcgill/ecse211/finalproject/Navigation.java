@@ -7,8 +7,9 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.motor.EV3MediumRegulatedMotor;
 
 /**
- * This class contains the basic method for the navigation. All the movements of the robot is
- * controlled by the this class. The methods will be called by UltrasonicLocalizer or
+ * This class contains the basic method for the navigation. The robot is able to go
+ * forward/backward, turn and search for/identify objects. All the movements of the robot is
+ * controlled by the this class. The methods will be called by FinalProject, UltrasonicLocalizer or
  * LightLocalizer.
  * 
  * @author Floria Peng
@@ -63,7 +64,7 @@ public class Navigation {
   /**
    * The approach can method speed adjustment
    */
-  public static final int APPROACH_ADJ = 80;
+  public static final int APPROACH_ADJ = 30;
   /**
    * The back method speed adjustment
    */
