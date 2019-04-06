@@ -62,21 +62,30 @@ import lejos.robotics.SampleProvider;
  * 
  * <p>
  * After initialing all the instances, the main method will start the thread for odometer, and
- * ultrasonic localizer at the same time. After the termination of the ultrasonic localizer, the
- * light localizer thread will be created and start. Finally, after the termination of the light
- * localization, the robot will beep to indicate the user that the robot is well localized and ready
- * to run.
+ * ultrasonic localizer at the same time. odometer thread uses Odometer class, algrithm see Software
+ * Document section 3.0. Ultrasonic localizer thread uses the ultrasonic sensor at the front of the
+ * robot to detect the distance from the left wall and the distance form the back wall, and use the
+ * two distances and odometer to calculate the angle between its current angle and absolute 0 angle
+ * (UltrasonicLocalizer class, algorithm see Software Document section 5.1). After the termination
+ * of the ultrasonic localizer, the light localizer thread will be created and start. Light
+ * localizer thread uses the two light sensors at the back of the robot facing down to detect the
+ * grid line. The first light sensor to detect the line will stop the wheel motor on its side and
+ * wait for the second sensor to arrive at this line, stop both motors; therefore the wheels will be
+ * parallel to the line (LightLocalizer class, algorithm see Software Document section 5.2).
+ * Finally, after the termination of the light localization, the robot will beep to indicate the
+ * user that the robot is well localized and ready to run.
  * 
  * <p>
- * After localizing to the grid, the main method will generate a path to travel through the tunnel,
+ * The following program is run in the main method, using the methods in Navigation class. After
+ * localizing to the grid, the main method will generate a path to travel through the tunnel,
  * containing the point of before and after tunnel localization point. After that, it will generate
- * a S-shape search map, then navigate the robot to travel through the tunnel, arrive at the lower
- * left corner of the search region, and perform a search in the prescribed area for a can of
- * specified color (search path is following the generated map). The robot will arrive at each map
- * point, turn to find the cans around it, go approach the can, detect the can and identify its
- * color, and beeps if the target color is found. Before termination, the robot will be navigated to
- * the upper right corner of the search region. (The flowchart and thread map are in Software
- * Document section 10.0).
+ * a S-shape search map, then navigate the robot to travel through the tunnel, arrive at the first
+ * map point, turn 360 degree to perform the search in the prescribed area for a can (search path is
+ * following the generated map). The robot will arrive at each map point, turn to find the cans
+ * around it, go approach the can, detect the can and identify its color, and beeps according to the
+ * color and weight of the can. Before termination, the robot will go back throught tunnel and place
+ * the can at its starting corner. (The flowchart and thread map are in Software Document section
+ * 10.0).
  * 
  * @author Floria Peng
  */
@@ -88,7 +97,7 @@ public class FinalProject {
    * The IP address of the server
    */
 
-  private static final String SERVER_IP = "192.168.2.19";
+  private static final String SERVER_IP = "192.168.2.15";
 
   /**
    * The team number of the user
