@@ -3,7 +3,6 @@ package ca.mcgill.ecse211.finalproject;
 import java.util.Arrays;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
-import lejos.hardware.Sound;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.robotics.SampleProvider;
 
@@ -157,7 +156,6 @@ public class UltrasonicLocalizer implements Runnable {
         rightMotor.setAcceleration(ACCELERATION);
         leftMotor.stop(true); // Stop the motors
         rightMotor.stop(false);
-        Sound.beepSequenceUp();
         break;
       }
       try {
