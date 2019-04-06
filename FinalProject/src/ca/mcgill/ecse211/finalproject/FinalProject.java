@@ -17,9 +17,9 @@ import lejos.robotics.SampleProvider;
 
 /**
  * <p>
- * This is the main class of the program for the Final Project (beta demo version). It contains the
+ * This is the main class of the program for the Final Project. It contains the
  * 4 motor/output ports (two large regulated motor, one medium regulated motor and one large
- * unregulated motor), and 4 sensor/input ports (three color sensor, one ultrasonic sensor). And in
+ * unregulated motor), and 4 sensor/input ports (three color sensor, one ultrasonic sensor). In
  * the constant field, the user should change, before running the program, first, the SERVER_IP
  * according to the IP address of his/her own computer; second, the TEAM_NUMBER to the user team
  * number. The static constant field of this class also contains the parameters of the robot (wheel
@@ -34,7 +34,7 @@ import lejos.robotics.SampleProvider;
  * board is the (0, 0) coordinate). At the beginning, the robot will start to initialize all the
  * sensors (two color sensor to RED mode, one color sensor to RGB mode and the ultrasonic sensor to
  * distance mode), and create the instances for the program (odometer, display, weight can, line
- * correction, navigation, ultrasoinc localizer and light localizer). After initialization, The
+ * correction, navigation, ultrasonic localizer and light localizer). After initialization, The
  * Wi-Fi connection that connects the robot with the server using Wi-Fi, will obtain data from the
  * server. The Wi-Fi connection is implemented by importing and building path to a helper class.
  * Using the if/else statement, the robot will only store the useful data and exit the program if
@@ -45,29 +45,33 @@ import lejos.robotics.SampleProvider;
  * <p>
  * The Odometer class keep track of the position (x, y, and theta) of the robot, with x, y and theta
  * initialized according to the result of the localization and the starting corner (see Software
- * Document section 3.0). The ColorClassification class will detect the color of the can (fetching
+ * Document section 3.0). 
+ * <p>
+ * The ColorClassification class will detect the color of the can (fetching
  * R, G, B sample using the RGB mode) and identify the color (comparing the reading with the
  * standardized default value of each color, i.e., blue, green, yellow and red); the color sensor
  * carried by the arm (rotates 180 degrees), so the color sensor will keep detecting the color while
- * the arm is moving, and finally return the color that is detected most (see Software Document
- * section 6.0). The WeightCan class contains the control of the claw of the robot, including the
- * lifting and dropping can, and weight detection (see Software Document section 7.0). The
- * LineCorrection class contains two differential filter method for the two color sensor in RED mode
+ * the arm is moving, and finally returns the color that is detected most (see Software Document
+ * section 6.0). 
+ * <p>
+ * The WeightCan class contains the control of the claw of the robot, including the
+ * lifting and dropping can, and weight detection (see Software Document section 7.0). 
+ * <p>
+ * The LineCorrection class contains two differential filter method for the two color sensor in RED mode
  * for line detection. The Navigation class contains the control of the motion of the robot
  * (turning, traveling and angle correction), it will also call ColorClassification and WeightCan
  * class and run them in threads (see Software Document section 4.0). The UltrasonicLocalizer class
  * is able to localize the orientation (angle) of the robot and the LightLocalizer class will
  * localize the localization and the orientation (angle) of the robot, and reset the coordinates
  * according to the starting corner (see Software Document section 5.0).
- * 
  * <p>
  * After initialing all the instances, the main method will start the thread for odometer, and
- * ultrasonic localizer at the same time. odometer thread uses Odometer class, algrithm see Software
+ * ultrasonic localizer at the same time. odometer thread uses Odometer class, algorithm see Software
  * Document section 3.0. Ultrasonic localizer thread uses the ultrasonic sensor at the front of the
  * robot to detect the distance from the left wall and the distance form the back wall, and use the
  * two distances and odometer to calculate the angle between its current angle and absolute 0 angle
  * (UltrasonicLocalizer class, algorithm see Software Document section 5.1). After the termination
- * of the ultrasonic localizer, the light localizer thread will be created and start. Light
+ * of the ultrasonic localizer, the light localizer thread will be created and started. Light
  * localizer thread uses the two light sensors at the back of the robot facing down to detect the
  * grid line. The first light sensor to detect the line will stop the wheel motor on its side and
  * wait for the second sensor to arrive at this line, stop both motors; therefore the wheels will be
@@ -83,9 +87,28 @@ import lejos.robotics.SampleProvider;
  * map point, turn 360 degree to perform the search in the prescribed area for a can (search path is
  * following the generated map). The robot will arrive at each map point, turn to find the cans
  * around it, go approach the can, detect the can and identify its color, and beeps according to the
- * color and weight of the can. Before termination, the robot will go back throught tunnel and place
+ * color and weight of the can. Before termination, the robot will go back through tunnel and place
  * the can at its starting corner. (The flowchart and thread map are in Software Document section
  * 10.0).
+ * 
+ * <p>
+ * In summary, at any time, there will be at most 2 thread running at in parallel: odometer thread with 
+ * either ultrasonicLocalizer, lightLocalizer, colorClassification or weightCan thread. Most threads are
+ * run sequentially (wait for their completion), expect for the Odometer for which its value needs to constantly be updated.
+ * 
+ * <p>
+ * The final state machine description of this program is the following: 
+ * The program starts at the initial state where it initializes ports, and sensors.
+ * It then transitions to state B where it connects to the Wifi Class and gets parameters.
+ * It then transitions to state C where it performs ultrasonic localization. 
+ * After that, it transitions to state D where it performs light localization.
+ * Next, it transitions to state E which makes the robot navigate to a point where it will re-localize (state E1). 
+ * It them transitions to state E2 where it gets ready to go through the tunnel. 
+ * Next, it transitions to the composite state F (in particular F1) which is when it reaches the search zone. This state is composed
+ * of sub-states which are a can is detected (F1) and a can is not detected (F2). 
+ * After detecting a can it moves to state G where it goes back to tunnel.
+ * Finally, it transition to state H which is the state where it goes back to starting corner.
+ * 
  * 
  * @author Floria Peng
  */
