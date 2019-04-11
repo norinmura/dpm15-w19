@@ -379,7 +379,7 @@ public class Navigation {
         e.printStackTrace();
       }
       int can_color = colorclassification.color;
-      if (can_color == 5) {
+      if (!(can_color == 1 || can_color == 2 || can_color == 3 || can_color == 4)) {
         sensorMotor.setSpeed(ROTATE_SPEED);
         sensorMotor.rotate(FULL_TURN, false);
         return;
