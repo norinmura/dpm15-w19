@@ -7,7 +7,7 @@ It works on LEGO Mindstorms EV3 platform under LeJOS firmware.
 Design a robot capable of navigating autonomously on the field, in search for 210 mL cans of various color and weight combinations. A can is to be retrieved and placed upright at the robot's starting position. 
 - Robot must successfully bring back a can within 5 minutes. 
 - Robot cannot travel into the water
-..* Robot must travel through teh tunnel
+⋅⋅*Robot must travel through the tunnel
 
 
 ## Components used
